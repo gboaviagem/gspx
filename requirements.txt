@@ -2,7 +2,8 @@
 pycodestyle
 pydocstyle
 # Actual code dependencies ------
+matplotlib~=3.5.1
 numpy~=1.21.5
-plotly~=5.5.0
-pygsp @ git+https://github.com/epfl-lts2/pygsp.git
+# pygsp @ git+https://github.com/epfl-lts2/pygsp.git
+networkx~=2.6.3
 pyquaternion==0.9.9
