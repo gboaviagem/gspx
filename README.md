@@ -19,5 +19,25 @@ or clone the repository and run `pip install` through all the requirements.
 ```sh
 git clone https://github.com/gboaviagem/gspx
 cd gspx
-pip install -r requirements.txt
+bash install.sh
 ```
+
+## Running unit tests locally
+
+When unit tests are implemented, one may run using `pytest`:
+```sh
+python3 -m pytest --cov .
+```
+
+## Update version in production
+
+Update setup.py version and packages and generate package by running:
+
+```sh
+python setup.py sdist bdist_wheel
+```
+
+## Acknowledgements
+
+The pre-commit hook used to verify codestyle was copied from
+[https://github.com/cbrueffer/pep8-git-hook](https://github.com/cbrueffer/pep8-git-hook).

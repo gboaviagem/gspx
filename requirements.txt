@@ -1,0 +1,8 @@
+# Package requirements
+# --------------------
+pycodestyle
+pydocstyle
+setuptools
+json
+numpy
+plotly
