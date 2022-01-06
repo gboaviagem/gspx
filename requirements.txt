@@ -2,6 +2,7 @@
 pycodestyle
 pydocstyle
 # Actual code dependencies ------
+ipykernel
 matplotlib~=3.5.1
 numpy~=1.21.5
 # pygsp @ git+https://github.com/epfl-lts2/pygsp.git
