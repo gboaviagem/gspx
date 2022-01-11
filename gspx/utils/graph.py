@@ -7,16 +7,16 @@ from scipy.sparse import csr_matrix, kron
 def adj_matrix_path(N, weights=None, directed=False):
     """Return the adjacency matrix of a path graph.
 
-        Parameters
-        ----------
-        N: int
-                Number of graph nodes.
-        weights: array, default=None
-                Array with edge weights. If None, unit weights are used.
-                If not None, then the given value of N is replaced by
-                weights + 1.
-        directed: bool, default=False
-                If True, a directed graph is created.
+    Parameters
+    ----------
+    N: int
+            Number of graph nodes.
+    weights: array, default=None
+            Array with edge weights. If None, unit weights are used.
+            If not None, then the given value of N is replaced by
+            weights + 1.
+    directed: bool, default=False
+            If True, a directed graph is created.
 
     Returns
     -------
@@ -38,10 +38,10 @@ def adj_matrix_path(N, weights=None, directed=False):
 def coords_path(N):
     """Coordinates of the vertices in the path graph.
 
-        Parameters
-        ----------
-        N : int
-                Number of graph vertices.
+    Parameters
+    ----------
+    N : int
+            Number of graph vertices.
 
     Returns
     -------
@@ -55,16 +55,16 @@ def coords_path(N):
 def make_path(N, weights=None, directed=False):
     """Create adjacency matrix and coordinates of a path graph.
 
-        Parameters
-        ----------
-        N: int
-                Number of graph nodes.
-        weights: array, default=None
-                Array with edge weights. If None, unit weights are used.
-                If not None, then the given value of N is replaced by
-                weights + 1.
-        directed: bool, default=False
-                If True, a directed graph is created.
+    Parameters
+    ----------
+    N: int
+            Number of graph nodes.
+    weights: array, default=None
+            Array with edge weights. If None, unit weights are used.
+            If not None, then the given value of N is replaced by
+            weights + 1.
+    directed: bool, default=False
+            If True, a directed graph is created.
 
     Returns
     -------
@@ -90,16 +90,16 @@ def make_grid(rows, columns, weights_r=None, weights_c=None):
     and each node is only connected to its direct neighbors, in the
     vertical and horizontal directions.
 
-        Parameters
-        ----------
-        rows: int
-                Number of rows in the grid.
-        columns: int
-                Number of columns in the grid.
-        weights_r: array, default=None
-                Weights in the rows. If None, unit weights are considered.
-        weights_c: array, default=None
-                Weights in the columns. If None, unit weights are considered.
+    Parameters
+    ----------
+    rows: int
+            Number of rows in the grid.
+    columns: int
+            Number of columns in the grid.
+    weights_r: array, default=None
+            Weights in the rows. If None, unit weights are considered.
+    weights_c: array, default=None
+            Weights in the columns. If None, unit weights are considered.
 
     Returns
     -------
@@ -115,7 +115,9 @@ def make_grid(rows, columns, weights_r=None, weights_c=None):
 
     # Using the property that the grid graph is the cartesian product
     # of two path graphs.
-    A = kron(csr_matrix(A1), csr_matrix(np.eye(N2))) + kron(
+    A = kron(
+        csr_matrix(A1), csr_matrix(np.eye(N2))
+    ) + kron(
         csr_matrix(np.eye(N1)), csr_matrix(A2)
     )
     coords = list()

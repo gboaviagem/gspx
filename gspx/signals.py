@@ -23,6 +23,7 @@ class QuaternionSignal(Signal):
         - "matrix"
 
     """
+
     def __init__(self, values):
         """Construct."""
         if isinstance(values, dict):
@@ -34,13 +35,27 @@ class QuaternionSignal(Signal):
 
     @staticmethod
     def from_rectangular(arr):
-        _, D = np.array(arr).shape
-        assert D == 4, (
+        """Create a QuaternionSignal from the rectangular form.
+
+        Parameters
+        ----------
+        arr : array-like, shape=(N, 4)
+
+        """
+        dims = np.array(arr).shape
+        assert len(dims) == 2 and dims[1] == 4, (
             "Please provide a (N, 4) array-like object."
         )
         return QuaternionSignal([dict(array=row) for row in arr])
 
     def to_rgba(self, max_value=None):
+        """Create the RGB representation.
+
+        Parameters
+        ----------
+        max_value : float, default=None
+
+        """
         out = np.array([
             [a[0], a[1], a[2], a[3]] for a in self.samples
         ])

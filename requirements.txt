@@ -5,6 +5,7 @@ pydocstyle
 ipykernel
 matplotlib~=3.5.1
 numpy~=1.21.5
+scipy~=1.7.3
 networkx~=2.6.3
 pyquaternion==0.9.9
 git+https://github.com/epfl-lts2/pygsp.git
