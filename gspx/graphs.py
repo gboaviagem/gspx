@@ -4,6 +4,7 @@ import numpy as np
 import networkx as nx
 from scipy.sparse import csr_matrix, csgraph
 from scipy.sparse.linalg import eigs
+from gspx.base import Signal
 
 
 class Graph:
@@ -103,7 +104,7 @@ class Graph:
             return_eigenvectors=return_eigenvectors,
             **kwargs)
 
-    def plot(self, colors=None, coords=None, alpha=0.7):
+    def plot(self, color_signal=None, coords=None, alpha=0.7):
         """Display a representation of the graph.
 
         Parameters
@@ -113,6 +114,11 @@ class Graph:
         coords : array-like, shape=(n_nodes, 3), default=None
 
         """
+        if isinstance(color_signal, Signal):
+            colors = color_signal.to_rgba()[:, :-1]  # ignore the alpha channel
+        else:
+            colors = color_signal
+
         kwargs = dict()
         if colors is not None:
             colors = [
