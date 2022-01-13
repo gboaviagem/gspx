@@ -142,6 +142,8 @@ class ImageGraph(Graph):
     """Grid graph that models the digital image domain."""
 
     coords = None
+    nr_ = None
+    nc_ = None
 
     @staticmethod
     def from_image(im_path):
@@ -163,10 +165,12 @@ class ImageGraph(Graph):
 
         A, coords = make_grid(rows=nr, columns=nc)
         graph = ImageGraph(A)
+        graph.nr_ = nr
+        graph.nc_ = nc
         graph.coords = coords
         return graph
 
-    def as_matrix(self, signal):
+    def as_matrix(self, signal, dpi=200):
         """Display each channel of the image as separate matrices.
 
         Parameters
@@ -177,5 +181,5 @@ class ImageGraph(Graph):
         assert isinstance(signal, QuaternionSignal), (
             "ImageGraph instances accept only quaternion signals."
         )
-        arr = signal.to_array()
-        visualize_quat_mtx(arr)
+        arr = signal.to_array().reshape((self.nr_, self.nc_, -1))
+        visualize_quat_mtx(arr, dpi=dpi)
