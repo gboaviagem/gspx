@@ -4,7 +4,12 @@ import numpy as np
 import networkx as nx
 from scipy.sparse import csr_matrix, csgraph
 from scipy.sparse.linalg import eigs
+import matplotlib.pyplot as plt
+
 from gspx.base import Signal
+from gspx.signals import QuaternionSignal
+from gspx.utils.graph import make_grid
+from gspx.utils.display import visualize_quat_mtx
 
 
 class Graph:
@@ -115,7 +120,7 @@ class Graph:
 
         """
         if isinstance(color_signal, Signal):
-            colors = color_signal.to_rgba()[:, :-1]  # ignore the alpha channel
+            colors = color_signal.to_rgb()  # ignoring the alpha channel
         else:
             colors = color_signal
 
@@ -131,3 +136,46 @@ class Graph:
 
         G = nx.from_scipy_sparse_matrix(self.adjacency)
         nx.draw(G, **kwargs)
+
+
+class ImageGraph(Graph):
+    """Grid graph that models the digital image domain."""
+
+    coords = None
+
+    @staticmethod
+    def from_image(im_path):
+        """Create an ImageGraph instance out of an image file.
+
+        Parameters
+        ----------
+        im_path : str
+            Path of the image file. The file format must be accepted by the
+            matplotlib.pyplot.imread() function.
+
+        Return
+        ------
+        ImageGraph instance.
+
+        """
+        arr = plt.imread(im_path)
+        nr, nc, _ = arr.shape
+
+        A, coords = make_grid(rows=nr, columns=nc)
+        graph = ImageGraph(A)
+        graph.coords = coords
+        return graph
+
+    def as_matrix(self, signal):
+        """Display each channel of the image as separate matrices.
+
+        Parameters
+        ----------
+        signal : gspx.signals.uaternionSignal object.
+
+        """
+        assert isinstance(signal, QuaternionSignal), (
+            "ImageGraph instances accept only quaternion signals."
+        )
+        arr = signal.to_array()
+        visualize_quat_mtx(arr)

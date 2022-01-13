@@ -55,22 +55,32 @@ class QuaternionSignal(Signal):
             ))
         return QuaternionSignal([dict(array=row) for row in arr])
 
-    def to_rgba(self, max_value=None):
-        """Create the rgba representation.
+    def to_array(self, max_value=None):
+        """Create a pure-numpy array representation.
+
+        The signal with length N turns into a (N, 4) float-valued numpy array.
 
         The r, g and b channels are mapped to the vector components
         of the quaternion, whereas the alpha channel is the real part.
 
         Parameters
         ----------
-        max_value : float, default=None
+        max_value : str {'self'} or float, default=None
             All the channel values are divided by `max_value`. If None,
-            then it is the maximum value in the (N, 4) resulting array.
+            division is not performed. If 'self', the maximum value of the
+            numpy representation is used.
 
         """
         out = np.array([
-            [a[1], a[2], a[3], a[0]] for a in self.samples
+            [a[0], a[1], a[2], a[3]] for a in self.samples
         ])
-        if max_value is None:
+        if max_value == 'self':
             max_value = out.max()
-        return out / max_value
+        if max_value is not None:
+            out = out / max_value
+        return out
+
+    def to_rgb(self):
+        """RGB (normalized) representatino of the signal. Real part ignored."""
+        arr = self.to_array(max_value='self')
+        return arr[:, 1:]
