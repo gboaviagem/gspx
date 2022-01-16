@@ -8,13 +8,19 @@ This package aims to implement an extension of [graph signal processing (GSP)](h
 
 ## Instalation
 
-It is possible to pip-install the package from Github,
-
+It is recommended to create a separated python environment to run gspx. If one chooses to install [Miniconda](https://docs.conda.io/en/latest/miniconda.html) (my personal favorite), an appropriate environment is created and open through the lines
 ```sh
-pip install git+https://github.com/gboaviagem/gspx@main
+conda create --name gspx_env python=3.7
+conda activate gspx_env
 ```
 
-or clone the repository and run `pip install` through all the requirements.
+Then, the packages can be pip-installed from Github,
+
+```sh
+python -m pip install git+https://github.com/gboaviagem/gspx@main
+```
+
+or one may choose the simply install its dependencies:
 
 ```sh
 git clone https://github.com/gboaviagem/gspx
