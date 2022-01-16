@@ -20,7 +20,7 @@ Then, the packages can be pip-installed from Github,
 python -m pip install git+https://github.com/gboaviagem/gspx@main
 ```
 
-or one may choose the simply install its dependencies:
+or one may choose to simply install its dependencies:
 
 ```sh
 git clone https://github.com/gboaviagem/gspx
