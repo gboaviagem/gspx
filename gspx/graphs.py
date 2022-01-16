@@ -29,6 +29,9 @@ class Graph:
 
     """
 
+    eigvals = None
+    v = None
+
     def __init__(self, A):
         """Construct."""
         if isinstance(A, np.ndarray):
@@ -37,6 +40,15 @@ class Graph:
             self.adjacency = A
         else:
             raise ValueError("Please provide a numpy array or CSR matrix.")
+
+    def gft(self, signal, **eigenbasis_kwargs):
+        """Compute the graph Fourier transform of signal."""
+        assert isinstance(signal, Signal), (
+            "Please provide a Signal input."
+        )
+        if self.eigvals is None and self.v is None:
+            self.compute_eigenbasis(**eigenbasis_kwargs)
+        return np.dot(self.v, signal)
 
     def compute_eigenbasis(
             self, k=6, M=None, sigma=None, return_eigenvectors=True,
@@ -90,9 +102,9 @@ class Graph:
             Other keyword arguments. Please refer to the documentation
             on `scipy.sparse.linalg.eig`.
 
-        Returns
-        -------
-        w : ndarray
+        Attributes
+        ----------
+        eigvals : ndarray
             Array of k eigenvalues.
         v : ndarray
             An array of `k` eigenvectors.
@@ -104,7 +116,7 @@ class Graph:
         # w : Array of k eigenvalues.
         # v : An array of k eigenvectors. v[:, i] is the eigenvector
         # corresponding to the eigenvalue w[i].
-        w, v = eigs(
+        self.eigvals, self.v = eigs(
             L, k=k, M=M, sigma=sigma,
             return_eigenvectors=return_eigenvectors,
             **kwargs)
@@ -131,6 +143,9 @@ class Graph:
                 for rgb in colors / colors.max()
             ]
             kwargs['node_color'] = colors
+        if coords is None and hasattr(self, 'coords'):
+            # That is the case for the child classes, such as ImageGraph
+            coords = self.coords
         if coords is not None:
             kwargs['pos'] = coords
 
