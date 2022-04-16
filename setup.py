@@ -32,5 +32,9 @@ setup(
     author_email="guilherme.boaviagem@gmail.com",
     install_requires=install_requires,
     packages=["gspx"],
-    package_data={"gspx": ["resources/jelly_beans.tiff"]},
+    package_data={"gspx": [
+        "resources/jelly_beans.tiff",
+        "resources/uk_towns.tsv",
+        "resources/uk_towns_wind.tsv"
+    ]},
 )
