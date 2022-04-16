@@ -81,6 +81,6 @@ class QuaternionSignal(Signal):
         return out
 
     def to_rgb(self):
-        """RGB (normalized) representatino of the signal. Real part ignored."""
+        """RGB (normalized) representation of the signal. Real part ignored."""
         arr = self.to_array(max_value='self')
         return arr[:, 1:]
