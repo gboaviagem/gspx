@@ -24,14 +24,20 @@ class QuaternionSignal(Signal):
 
     """
 
-    def __init__(self, values):
+    def __init__(self, values=None):
         """Construct."""
         if isinstance(values, dict):
             values = [values]
 
-        self.samples = np.array([
-            Quaternion(**kwargs) for kwargs in values
-        ])
+        if values is not None:
+            self.samples = np.array([
+                Quaternion(**kwargs) for kwargs in values
+            ])
+
+    @property
+    def shape(self):
+        """Return the shape of the array of samples."""
+        return self.samples.shape
 
     @staticmethod
     def from_rectangular(arr, def_real_part=1.0, dtype=None):

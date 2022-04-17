@@ -12,5 +12,7 @@ def uk_wind():
     https://www.latlong.net/category/towns-235-55.html
 
     """
-    fn = pathlib.Path(__file__).parent.parent / 'resources/uk_towns_wind.tsv'
+    fn = (
+        pathlib.Path(__file__).parent.parent /
+        "resources/uk_towns_wind_at_16Apr202219pm.gz")
     return pd.read_csv(fn, sep="\t")

@@ -1,6 +1,7 @@
 # Code style --------------------
 pycodestyle
 pydocstyle
+tqdm
 # Actual code dependencies ------
 ipykernel
 matplotlib~=3.5.1

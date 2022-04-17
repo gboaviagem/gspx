@@ -35,19 +35,26 @@ class Graph:
     def __init__(self, A):
         """Construct."""
         if isinstance(A, np.ndarray):
-            self.adjacency = csr_matrix(A)
+            self.is_sparse = False
         elif isinstance(A, csr_matrix):
-            self.adjacency = A
+            self.is_sparse = True
         else:
             raise ValueError("Please provide a numpy array or CSR matrix.")
+        self.adjacency = A
 
     def gft(self, signal, **eigenbasis_kwargs):
         """Compute the graph Fourier transform of signal."""
         assert isinstance(signal, Signal), (
             "Please provide a Signal input."
         )
-        if self.eigvals is None and self.v is None:
+        if self.is_sparse:
+            raise NotImplementedError(
+                "Method not yet implemented for sparse adjacency matrices."
+            )
+
+        if self.eigvals is None or self.v is None:
             self.compute_eigenbasis(**eigenbasis_kwargs)
+
         return np.dot(self.v, signal)
 
     def compute_eigenbasis(
@@ -55,12 +62,15 @@ class Graph:
             **kwargs):
         """Compute the Fourier eigenbasis.
 
+        All parameters are relevant only if self.is_sparse == True.
+
         Parameters
         ----------
         k : int, optional
             The number of eigenvalues and eigenvectors desired.
             `k` must be smaller than N-1. It is not possible to compute all
             eigenvectors of a matrix.
+            Only relevant if self.is_sparse = True.
         M : ndarray, sparse matrix or LinearOperator, optional
             An array, sparse matrix, or LinearOperator representing
             the operation M*x for the generalized eigenvalue problem
@@ -78,6 +88,7 @@ class Graph:
             iterative solver for a general linear operator.  Alternatively,
             the user can supply the matrix or operator Minv, which gives
             ``x = Minv * b = M^-1 * b``.
+            Only relevant if self.is_sparse = True.
         sigma : real or complex, optional
             Find eigenvalues near sigma using shift-invert mode.  This requires
             an operator to compute the solution of the linear system
@@ -96,8 +107,7 @@ class Graph:
                 If A is real and OPpart == 'i',
                 ``w'[i] = 1/2i * [1/(w[i]-sigma) - 1/(w[i]-conj(sigma))]``.
                 If A is complex, ``w'[i] = 1/(w[i]-sigma)``.
-        return_eigenvectors : bool, optional
-            Return eigenvectors (True) in addition to eigenvalues
+            Only relevant if self.is_sparse = True.
         **kwargs : dict
             Other keyword arguments. Please refer to the documentation
             on `scipy.sparse.linalg.eig`.
@@ -105,21 +115,27 @@ class Graph:
         Attributes
         ----------
         eigvals : ndarray
-            Array of k eigenvalues.
+            Array of k eigenvalues. If self.is_sparse = False, k is
+            the amount of graph nodes.
         v : ndarray
             An array of `k` eigenvectors.
             ``v[:, i]`` is the eigenvector corresponding to the
             eigenvalue w[i].
 
         """
-        L = csgraph.laplacian(self.adjacency)
-        # w : Array of k eigenvalues.
-        # v : An array of k eigenvectors. v[:, i] is the eigenvector
-        # corresponding to the eigenvalue w[i].
-        self.eigvals, self.v = eigs(
-            L, k=k, M=M, sigma=sigma,
-            return_eigenvectors=return_eigenvectors,
-            **kwargs)
+        if self.is_sparse:
+            L = csgraph.laplacian(self.adjacency)
+            # w : Array of k eigenvalues.
+            # v : An array of k eigenvectors. v[:, i] is the eigenvector
+            # corresponding to the eigenvalue w[i].
+            self.eigvals, self.v = eigs(
+                L, k=k, M=M, sigma=sigma,
+                return_eigenvectors=True,
+                **kwargs)
+        else:
+            D = np.diag(self.adjacency.sum(axis=1))  # in-degree matrix
+            L = D - self.adjacency
+            self.eigvals, self.v = np.linalg.eig(L)
 
     def plot(self, color_signal=None, coords=None, alpha=0.7):
         """Display a representation of the graph.
