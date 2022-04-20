@@ -34,7 +34,6 @@ setup(
     packages=["gspx"],
     package_data={"gspx": [
         "resources/jelly_beans.tiff",
-        "resources/uk_towns.tsv",
-        "resources/uk_towns_wind.tsv"
+        "resources/uk_weather_at_20Apr202213pm.gz"
     ]},
 )
