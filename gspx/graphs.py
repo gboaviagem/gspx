@@ -214,3 +214,35 @@ class ImageGraph(Graph):
         )
         arr = signal.to_array().reshape((self.nr_, self.nc_, -1))
         visualize_quat_mtx(arr, dpi=dpi)
+
+
+class QuaternionGraph:
+    """Store and manipulate graphs with quaternionic weights.
+
+    Parameters
+    ----------
+    A : array-like
+        Quaternion-valued weighted adjacency matrix.
+        Shape should be (n_nodes, n_nodes).
+
+    """
+
+    # data, row_ind and col_ind follow the meaning from Scipy's CSR matrix:
+    # https://docs.scipy.org/doc/scipy/reference/generated/
+    # scipy.sparse.csr_matrix.html
+    CA_data_ = None
+    CA_row_ind_ = None
+    CA_col_ind_ = None
+
+    eigvals = None
+    v = None
+
+    def __init__(self, A):
+        """Construct."""
+        if isinstance(A, np.ndarray):
+            self.is_sparse = False
+        elif isinstance(A, csr_matrix):
+            self.is_sparse = True
+        else:
+            raise ValueError("Please provide a numpy array or CSR matrix.")
+        self.adjacency = A

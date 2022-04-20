@@ -23,6 +23,7 @@ class QuaternionSignal(Signal):
         - "matrix"
 
     """
+    samples = None
 
     def __init__(self, values=None):
         """Construct."""
@@ -90,3 +91,17 @@ class QuaternionSignal(Signal):
         """RGB (normalized) representation of the signal. Real part ignored."""
         arr = self.to_array(max_value='self')
         return arr[:, 1:]
+
+    def to_rgba(self):
+        """RGBA (normalized) representation of the signal."""
+        def normalize(array):
+            array -= np.min(array)
+            return array / np.max(array)
+
+        arr = self.to_array(max_value=None)
+        # arr = arr - np.min(arr)
+        # arr = arr / np.max(arr)
+        rgba = np.zeros(arr.shape, dtype=arr.dtype)
+        rgba[:, 0:3] = normalize(arr[:, 1:4].copy())
+        rgba[:, 3] = normalize(arr[:, 0].copy())
+        return rgba
