@@ -23,6 +23,7 @@ class QuaternionSignal(Signal):
         - "matrix"
 
     """
+
     samples = None
 
     def __init__(self, values=None):
@@ -34,6 +35,51 @@ class QuaternionSignal(Signal):
             self.samples = np.array([
                 Quaternion(**kwargs) for kwargs in values
             ])
+
+    def involution(self, axis=[0, 1, 0, 0], inplace=True):
+        """Compute the involution of each sample by a given axis.
+
+        Parameters
+        ----------
+        axis : array-like of shape=(4,) or str {'i', 'j', 'k'}
+            The axis used in the involution. The unit quaternion `mu`
+            in the given axis is used in the computation
+            `- mu * self.samples * mu`. The default is [0, 1, 0, 0].
+        inplace : bool, default=True
+            Whether the involution will affect the object samples, or
+            will create a new instance.
+
+        Example
+        -------
+        >>> from gspx.signals import QuaternionSignal
+        >>> arr = [[1, 2, 3, 4], [2, -3, -4, 1]]
+        >>> s = QuaternionSignal.from_rectangular(arr)
+        >>> q = s.involution("i", inplace=False)
+        >>> q.samples
+        [Quaternion(1.0, 2.0, -3.0, -4.0), Quaternion(2.0, -3.0, 4.0, -1.0)]
+
+        """
+        if axis == "i":
+            axis = [0, 1, 0, 0]
+        elif axis == "j":
+            axis = [0, 0, 1, 0]
+        elif axis == "k":
+            axis = [0, 0, 0, 1]
+        else:
+            assert len(axis) == 4, (
+                "The `axis` must be either an array-like of length 4 "
+                "of one of the characters: [i, j, k], indicating the "
+                "ordinary basis for pure quaternions."
+            )
+
+        mu = Quaternion(axis).unit
+        new_samples = np.array([- mu * q * mu for q in self.samples])
+        if inplace:
+            self.samples = new_samples
+        else:
+            new = QuaternionSignal()
+            new.samples = new_samples
+            return new
 
     @property
     def shape(self):
