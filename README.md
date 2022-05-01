@@ -32,7 +32,11 @@ bash install.sh
 
 When unit tests are implemented, one may run using `pytest`:
 ```sh
-python3 -m pytest --cov .
+python -m pytest --cov=gspx .
+```
+To update the coverage badge, run
+```sh
+coverage-badge -o coverage.svg
 ```
 
 ## Update version in production

@@ -55,7 +55,7 @@ class QuaternionSignal(Signal):
         >>> arr = [[1, 2, 3, 4], [2, -3, -4, 1]]
         >>> s = QuaternionSignal.from_rectangular(arr)
         >>> q = s.involution("i", inplace=False)
-        >>> q.samples
+        >>> q.samples.tolist()
         [Quaternion(1.0, 2.0, -3.0, -4.0), Quaternion(2.0, -3.0, 4.0, -1.0)]
 
         """
