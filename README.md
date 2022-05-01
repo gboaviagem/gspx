@@ -1,4 +1,6 @@
 # gspx: Graph Signal Processing on eXtension algebras
+![coverage](./coverage.svg)
+
 Python package for implementing graph signal processing on extension (higher dimensional) algebras (currently, only quaternions)
 
 
