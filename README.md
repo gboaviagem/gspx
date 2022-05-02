@@ -38,7 +38,7 @@ python -m pytest --cov=gspx .
 ```
 To update the coverage badge, run
 ```sh
-coverage-badge -o coverage.svg
+rm coverage.svg && coverage-badge -o coverage.svg
 ```
 
 ## Update version in production

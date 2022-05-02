@@ -36,7 +36,34 @@ class QuaternionSignal(Signal):
                 Quaternion(**kwargs) for kwargs in values
             ])
 
-    def involution(self, axis=[0, 1, 0, 0], inplace=True):
+    def conjugate(self, inplace=False):
+        """Return the conjugate of samples.
+
+        Parameters
+        ----------
+        inplace : bool, default=False
+            Whether the conjugation will affect the object samples, or
+            will create a new instance.
+
+        Example
+        -------
+        >>> from gspx.signals import QuaternionSignal
+        >>> arr = [[1, 2, 3, 4], [2, -3, -4, 1]]
+        >>> s = QuaternionSignal.from_rectangular(arr)
+        >>> q = s.conjugate(inplace=False)
+        >>> q.samples.tolist()
+        [Quaternion(1.0, -2.0, -3.0, -4.0), Quaternion(2.0, 3.0, 4.0, -1.0)]
+
+        """
+        new_samples = np.array([q.conjugate for q in self.samples])
+        if inplace:
+            self.samples = new_samples
+        else:
+            new = QuaternionSignal()
+            new.samples = new_samples
+            return new
+
+    def involution(self, axis=[0, 1, 0, 0], inplace=False):
         """Compute the involution of each sample by a given axis.
 
         Parameters
@@ -45,7 +72,7 @@ class QuaternionSignal(Signal):
             The axis used in the involution. The unit quaternion `mu`
             in the given axis is used in the computation
             `- mu * self.samples * mu`. The default is [0, 1, 0, 0].
-        inplace : bool, default=True
+        inplace : bool, default=False
             Whether the involution will affect the object samples, or
             will create a new instance.
 
