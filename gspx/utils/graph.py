@@ -6,30 +6,80 @@ from tqdm import tqdm
 from sklearn.neighbors import NearestNeighbors
 
 
-def adj_matrix_path(N, weights=None, directed=False):
+def adj_matrix_ring(N=None, weights=None):
     """Return the adjacency matrix of a path graph.
 
     Parameters
     ----------
-    N: int
-            Number of graph nodes.
+    N: int, default=None
+        Number of graph nodes.
     weights: array, default=None
-            Array with edge weights. If None, unit weights are used.
-            If not None, then the given value of N is replaced by
-            weights + 1.
-    directed: bool, default=False
-            If True, a directed graph is created.
+        Array with edge weights.
 
     Returns
     -------
     A : np.ndarray, shape=(N,N)
 
     """
+    assert N is not None or weights is not None, (
+        "Either 'N' or 'weights' must be given."
+    )
+    if N is not None and weights is not None:
+        print("Ignoring 'N' since 'weights' was also given.")
+
+    if weights is None:
+        weights = np.zeros(N) + 1
+
+    return np.roll(np.diag(weights), shift=1, axis=1)
+
+
+def coords_ring_graph(N):
+    """Return the vertices coordinates of a ring graph.
+
+    Parameters
+    ----------
+    N: int
+        Number of graph nodes.
+
+    """
+    coords = np.zeros((N, 2))
+    n = np.arange(N)
+    coords[:, 0] = np.cos(2.0*np.pi*n/N)
+    coords[:, 1] = -np.sin(2.0*np.pi*n/N)
+    return coords
+
+
+def adj_matrix_path(N=None, weights=None, directed=False):
+    """Return the adjacency matrix of a path graph.
+
+    Parameters
+    ----------
+    N: int, default=None
+        Number of graph nodes.
+    weights: array, default=None
+        Array with edge weights. If None, unit weights are used.
+        If not None, then the given value of N is replaced by
+        weights + 1.
+    directed: bool, default=False
+        If True, a directed graph is created.
+
+    Returns
+    -------
+    A : np.ndarray, shape=(N,N)
+
+    """
+    assert N is not None or weights is not None, (
+        "Either 'N' or 'weights' must be given."
+    )
+    if N is not None and weights is not None:
+        print("Ignoring 'N' since 'weights' was also given.")
+
     if weights is None:
         A = np.tri(N, k=1) - np.tri(N, k=-2) - np.eye(N)
     else:
+        assert isinstance(weights, np.ndarray)
         N = len(weights) + 1
-        A = np.zeros((N, N))
+        A = np.zeros((N, N), dtype=weights.dtype)
         A[:-1, 1:] = np.diag(weights)
         A = A + A.transpose()
     if directed:
