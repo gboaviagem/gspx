@@ -4,6 +4,7 @@ import numpy as np
 from scipy.sparse import csr_matrix, kron
 from tqdm import tqdm
 from sklearn.neighbors import NearestNeighbors
+import networkx as nx
 
 
 def adj_matrix_ring(N=None, weights=None):
@@ -182,8 +183,7 @@ def make_grid(rows, columns, weights_r=None, weights_c=None):
 
 
 def nearest_neighbors(
-        X, n_neighbors=20, algorithm='ball_tree', mode='distance',
-        allow_self_loops=False):
+        X, n_neighbors=20, algorithm='ball_tree', mode='distance'):
     """Return the nearest neighbors' graph weighted adjacency matrix.
 
     This is a wrapper for the Scikit-learn NearestNeighbors.kneighbors_graph
@@ -269,3 +269,69 @@ def adj_matrix_from_coords_limited(coords, limit, theta=1, verbose=False):
                 A[i, j] = np.exp(-(distance ** 2)/(2 * theta ** 2))
 
     return A + A.transpose()
+
+
+def to_networkx(A):
+    """Create a Networkx graph out of a weighted adjacency matrix.
+
+    Parameters
+    ----------
+    A : CSR matrix or np.ndarray, shape=(N, N)
+
+    Returns
+    -------
+    g : nx.Graph or nx.DiGraph
+        A directed or undirected graph, depending on whether A
+        is symmetric.
+
+    """
+    if isinstance(A, csr_matrix):
+        A_ = A.toarray()
+    else:
+        A_ = A.copy()
+    is_symmetric = np.allclose(A, A.T, rtol=1e-05, atol=1e-08)
+
+    xi, yi = np.where(A_)
+    edgelist = [
+        (xi[n], yi[n], {'weight': A_[xi[n], yi[n]]})
+        for n in range(len(xi))
+    ]
+
+    if is_symmetric:
+        g = nx.Graph()
+    else:
+        g = nx.DiGraph()
+    g.add_edges_from(edgelist)
+
+    return g
+
+
+def graph_total_variation(X, S, tv_norm=2):
+    """Compute the graph total variation of column vectors.
+
+    Parameters
+    ----------
+    X : np.ndarray, shape=(N, K)
+        K column vectors.
+    S : np.ndarray, shape=(N, N)
+        Graph shift operator.
+    tv_norm : int, default=2
+        Order of the norm computed inside the total variation.
+
+    Returns
+    -------
+    tv : np.ndarray, shape=(K,)
+        Total variation of all the column vectors.
+
+    Notes
+    -----
+    The parameter `tv_norm` is passed as the `ord` parameters to
+    numpy.linalg.norm() [1]_.
+
+    References
+    ----------
+    [1] https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html
+
+    """
+    X_shifted = S @ X
+    return np.linalg.norm(X_shifted - X, axis=0, ord=tv_norm)
