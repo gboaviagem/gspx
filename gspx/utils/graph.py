@@ -135,6 +135,46 @@ def make_path(N, weights=None, directed=False):
     return A, coords
 
 
+def make_sensor(N, n_neighbors=5, seed=42, directed=False):
+    """Make a sensor graph.
+
+    Parameters
+    ----------
+    N : int
+        Number of nodes.
+    n_neighbors : int, default=5
+    seed : int, default=42
+    directed : bool, default=False
+
+    Example
+    -------
+    >>> A, coords = make_sensor(10, n_neighbors=5, directed=True)
+    >>> A.sum(axis=1)
+    array([
+        1.44572985, 1.4334267 , 1.4211341 , 1.42434198, 1.30134343,
+        1.62947431, 1.96808648, 1.32391798, 1.37514894, 1.25401296])
+    >>> coords
+    array([[0.37454012, 0.95071431],
+           [0.73199394, 0.59865848],
+           [0.15601864, 0.15599452],
+           [0.05808361, 0.86617615],
+           [0.60111501, 0.70807258],
+           [0.02058449, 0.96990985],
+           [0.83244264, 0.21233911],
+           [0.18182497, 0.18340451],
+           [0.30424224, 0.52475643],
+           [0.43194502, 0.29122914]])
+
+    """
+    rnd = np.random.RandomState(seed=42)
+    coords = rnd.uniform(low=0.0, high=1.0, size=(N, 2))
+    A = nearest_neighbors(coords, n_neighbors=n_neighbors)
+    A = A.toarray()
+    if not directed:
+        A = A + A.T
+    return A, coords
+
+
 def make_grid(rows, columns, weights_r=None, weights_c=None):
     """Create a grid graph.
 

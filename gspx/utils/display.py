@@ -76,7 +76,7 @@ def plot_graph(
 
     params = dict(
         node_size=30,
-        edge_color=(0.8, 0.8, 0.8, 0.3),
+        edge_color=(0.8, 0.8, 0.8, 1.0),
         with_labels=False
     )
 
