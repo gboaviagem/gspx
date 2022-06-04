@@ -36,6 +36,52 @@ def explode_quaternions(M):
     return mat
 
 
+def implode_quaternions(M):
+    """Turn a 3D real array into a 2D quaternion array.
+
+    Parameters
+    ----------
+    M : np.ndarray, shape=(n, m, 4)
+
+    Return
+    ------
+    mat : np.ndarray, shape=(n, 4)
+        Array of type np.dtype('O'). The non-zero entries are
+        "pyquaternion.Quaternion"-valued.
+
+    """
+    from pyquaternion import Quaternion
+    mat = (
+        M[:, :, 0] * Quaternion(1, 0, 0, 0) +
+        M[:, :, 1] * Quaternion(0, 1, 0, 0) +
+        M[:, :, 2] * Quaternion(0, 0, 1, 0) +
+        M[:, :, 3] * Quaternion(0, 0, 0, 1)
+    )
+    return mat
+
+
+def conjugate(M):
+    """Conjugate of a quaternion-valued matrix.
+
+    Parameters
+    ----------
+    M : np.ndarray, shape=(n, m)
+        Array of type np.dtype('O'). The non-zero entries are required
+        to be "pyquaternion.Quaternion"-valued.
+
+    Return
+    ------
+    mat : np.ndarray, shape=(n, m)
+        Array of type np.dtype('O'). The non-zero entries are required
+        to be "pyquaternion.Quaternion"-valued.
+        The imaginary part is the aditive inverse of that in `M`.
+
+    """
+    M_real = explode_quaternions(M)
+    M_real[:, :, 1:] = - M_real[:, :, 1:]
+    return implode_quaternions(M_real)
+
+
 def symplectic_decompose_mtx(M):
     """Compute the symplectic decomposition of a quaternion matrix.
 
