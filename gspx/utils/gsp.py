@@ -19,6 +19,8 @@ def gft(S, x, decompose_shift=True):
     x : np.ndarray, shape=(N,) or (N, 1)
         Graph signal spectrum.
     decompose_shift : bool, default=True
+        If False, then `S` is assumed to be the actual
+        GFT matrix.
 
     Example
     -------
@@ -62,6 +64,8 @@ def igft(S, x, decompose_shift=True):
     x : np.ndarray, shape=(N,) or (N, 1)
         Graph signal spectrum.
     decompose_shift : bool, default=True
+        If False, then `S` is assumed to be the actual
+        inverse-GFT matrix.
 
     Example
     -------
