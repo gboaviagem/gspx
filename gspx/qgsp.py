@@ -38,7 +38,7 @@ class QMatrix:
             arrays.append(np.zeros(shape))
 
         QS = QuaternionSignal.from_rectangular(np.hstack(
-            tuple([arr.ravel()[:, np.newaxis] for arr in arrays])
+            tuple(arr.ravel()[:, np.newaxis] for arr in arrays)
         ))
         self.matrix = QS.samples.reshape(shape)
 
@@ -75,6 +75,14 @@ class QMatrix:
         """Get the diagonal od the matrix."""
         return np.diag(self.matrix)
 
+    def mean(self, axis=0):
+        """Mean accross an axis."""
+        return self.matrix.mean(axis=axis)
+
+    def copy(self):
+        """Copy of the object."""
+        return QMatrix.from_matrix(self.matrix)
+
     def visualize(self, dpi=150):
         """Visualize the quaternion matrix."""
         visualize_quat_mtx(self.matrix, dpi=dpi)
@@ -82,9 +90,8 @@ class QMatrix:
     def __repr__(self):
         """Represent as string."""
         msg = (
-            "\x1B[3m"
-            "Quaternion-valued array of shape "
-            "{}:\x1B[0m\n{}".format(self.shape, self.matrix)
+            "\x1B[3mQuaternion-valued array of shape "
+            f"{self.shape}:\x1B[0m\n{self.matrix}"
         )
         return msg
 
@@ -92,8 +99,8 @@ class QMatrix:
         """Add."""
         if isinstance(other, QMatrix):
             return QMatrix.from_matrix(self.matrix + other.matrix)
-        else:
-            return QMatrix.from_matrix(self.matrix + other)
+
+        return QMatrix.from_matrix(self.matrix + other)
 
     def __sub__(self, other):
         """Subtract."""
@@ -103,8 +110,12 @@ class QMatrix:
         """Multiply."""
         if isinstance(other, QMatrix):
             return QMatrix.from_matrix(self.matrix @ other.matrix)
-        else:
-            return QMatrix.from_matrix(self.matrix * other)
+
+        return QMatrix.from_matrix(self.matrix * other)
+
+    def __div__(self, other):
+        """Divide."""
+        return QMatrix.from_matrix(self.matrix / other)
 
     def __eq__(self, other):
         """Assert equality."""
@@ -152,12 +163,14 @@ class QMatrix:
         return eigq, QMatrix.from_matrix(Vq)
 
 
-class qGFT:
+class QGFT:
     """Quaternion-valued Graph Fourier Transform."""
 
     def __init__(self):
         """Construct."""
-        pass
+        self.eigq = None
+        self.eigc = None
+        self.Vq = None
 
     def fit(self, shift_operator):
         """Fit the object.
@@ -181,27 +194,30 @@ class qGFT:
         return self
 
     def transform(self, signal):
-        """Apply the direct qGFT.
+        """Apply the direct QGFT.
 
         Parameters
         ----------
-        shift_operator : np.ndarray, shape=(N,)
+        signal : np.ndarray, shape=(N,)
 
         """
-        assert isinstance(signal, np.ndarray), (
-            "The signal is expected to be a Numpy 1D array."
-        )
-        return self.Vq.matrix @ signal.ravel()[:, np.newaxis]
+        raise NotImplementedError("The direct QGFT is not yet implemented.")
 
     def inverse_transform(self, signal):
-        """Apply the inverse qGFT.
+        """Apply the inverse QGFT.
 
         Parameters
         ----------
-        shift_operator : np.ndarray, shape=(N,)
+        signal : np.ndarray, shape=(N,)
 
         """
-        assert isinstance(signal, np.ndarray), (
+        s = signal.samples if isinstance(signal, QuaternionSignal) else signal
+        assert isinstance(s, np.ndarray), (
             "The signal is expected to be a Numpy 1D array."
         )
-        return self.Vq.matrix @ signal.ravel()[:, np.newaxis]
+        ss = self.Vq.matrix @ s.ravel()[:, np.newaxis]
+        if isinstance(signal, QuaternionSignal):
+            new = QuaternionSignal()
+            new.samples = ss
+            ss = new
+        return ss

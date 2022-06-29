@@ -1,6 +1,8 @@
 """Graph signal class."""
 
 import numpy as np
+import matplotlib.pyplot as plt
+
 from pyquaternion import Quaternion
 from gspx.base import Signal
 
@@ -63,12 +65,12 @@ class QuaternionSignal(Signal):
             new.samples = new_samples
             return new
 
-    def involution(self, axis=[0, 1, 0, 0], inplace=False):
+    def involution(self, axis="i", inplace=False):
         """Compute the involution of each sample by a given axis.
 
         Parameters
         ----------
-        axis : array-like of shape=(4,) or str {'i', 'j', 'k'}
+        axis : array-like of shape=(4,) or {'i', 'j', 'k'}, default='i'
             The axis used in the involution. The unit quaternion `mu`
             in the given axis is used in the computation
             `- mu * self.samples * mu`. The default is [0, 1, 0, 0].
@@ -135,7 +137,7 @@ class QuaternionSignal(Signal):
             ))
         return QuaternionSignal([dict(array=row) for row in arr])
 
-    def to_array(self, max_value=None):
+    def to_array(self, max_value=None, **kwargs):
         """Create a pure-numpy array representation.
 
         The signal with length N turns into a (N, 4) float-valued numpy array.
@@ -160,7 +162,27 @@ class QuaternionSignal(Signal):
             out = out / max_value
         return out
 
-    def to_rgb(self):
+    def __len__(self):
+        """Compute length."""
+        return len(self.samples)
+
+    def __add__(self, other):
+        """Add."""
+        new = QuaternionSignal()
+        new.samples = self.samples + other
+        return new
+
+    def __mul__(self, other):
+        """Multiply."""
+        new = QuaternionSignal()
+        new.samples = self.samples * other
+        return new
+
+    def __sub__(self, other):
+        """Subtract."""
+        return self + (-1 * other)
+
+    def to_rgb(self, **kwargs):
         """RGB (normalized) representation of the signal. Real part ignored."""
         arr = self.to_array(max_value='self')
         return arr[:, 1:]
@@ -178,3 +200,21 @@ class QuaternionSignal(Signal):
         rgba[:, 0:3] = normalize(arr[:, 1:4].copy())
         rgba[:, 3] = normalize(arr[:, 0].copy())
         return rgba
+
+    def visualize(self, dpi=100, **kwargs):
+        """Visualize the signal quaternion dimensions."""
+        arr = self.to_array()
+        _, axs = plt.subplots(2, 2, dpi=dpi)
+        titles = ["Real part", "i-component", "j-component", "k-component"]
+        colors = ["tab:blue", "tab:orange", "tab:green", "tab:red"]
+        params = dict(
+            marker='.', markersize=5,
+            alpha=0.8, linestyle='dotted',
+            linewidth=1.0
+        )
+        params.update(kwargs)
+        for i in range(4):
+            axs[int(i > 1), i % 2].plot(arr[:, i], color=colors[i], **params)
+            axs[int(i > 1), i % 2].set_title(titles[i])
+        plt.subplots_adjust(wspace=0.5, hspace=0.5)
+        plt.show()

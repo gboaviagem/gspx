@@ -2,9 +2,9 @@
 import matplotlib.pyplot as plt
 from matplotlib.cm import get_cmap
 import numpy as np
-from gspx.utils.quaternion_matrix import explode_quaternions
 import networkx as nx
 
+from gspx.utils.quaternion_matrix import explode_quaternions
 from gspx.utils.graph import to_networkx
 
 
