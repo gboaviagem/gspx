@@ -1,7 +1,8 @@
 """QLMS algorithm."""
 import numpy as np
 
-from gspx.utils.quaternion_matrix import explode_quaternions
+from gspx.utils.quaternion_matrix import explode_quaternions, \
+    implode_quaternions
 from gspx.qgsp import QMatrix
 
 
@@ -40,7 +41,8 @@ class QLMS:
                 ))
             )
 
-        return np.dstack(layers)
+        Xq = implode_quaternions(np.dstack(layers))
+        return QMatrix.from_matrix(Xq)
 
     @staticmethod
     def normal_scaling(X, ignore_first=True):

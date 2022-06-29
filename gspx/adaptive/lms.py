@@ -59,7 +59,7 @@ class LMS:
             self.mu_ = mu
             self.std_ = std
 
-        res = dict()
+        res = {}
         for lr in self.alpha:
             theta = LMS.initiate(length=d + 1, method='zeros')
             J = np.zeros(self.max_iter)
