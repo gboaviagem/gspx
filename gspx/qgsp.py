@@ -45,9 +45,51 @@ class QMatrix:
     @staticmethod
     def from_matrix(qmatrix):
         """Instantiate an object with the given quaternion matrix."""
-        Q = QMatrix([np.ones(qmatrix.shape)] * 4)
-        Q.matrix = qmatrix
-        return Q
+        new = QMatrix([np.ones(qmatrix.shape)] * 4)
+        new.matrix = qmatrix
+        return new
+
+    def to_sparse(self):
+        r"""Write the object as a list of non-zero entries and its indices.
+
+        Example
+        -------
+        >>> import numpy as np
+        >>> rnd = np.random.default_rng(seed=2)
+        >>> mat = QMatrix([np.ones((3, 3)) for _ in range(4)])
+        >>> mat.matrix[:, 1:] = Quaternion(0, 0, 0, 0)
+        >>> mat
+        Quaternion-valued array of shape (3, 3):
+        [[Quaternion(1.0, 1.0, 1.0, 1.0) Quaternion(0.0, 0.0, 0.0, 0.0)
+        Quaternion(0.0, 0.0, 0.0, 0.0)]
+        [Quaternion(1.0, 1.0, 1.0, 1.0) Quaternion(0.0, 0.0, 0.0, 0.0)
+        Quaternion(0.0, 0.0, 0.0, 0.0)]
+        [Quaternion(1.0, 1.0, 1.0, 1.0) Quaternion(0.0, 0.0, 0.0, 0.0)
+        Quaternion(0.0, 0.0, 0.0, 0.0)]]
+
+        >>> entries, idx_nz, shape = mat.to_sparse()
+        >>> print(
+        ...     f"Non-zero Entries: {entries}\nIndices: "
+        ...     f"{idx_nz}\nShape: {shape}")
+        Non-zero Entries: [
+            Quaternion(1.0, 1.0, 1.0, 1.0)
+            Quaternion(1.0, 1.0, 1.0, 1.0)
+            Quaternion(1.0, 1.0, 1.0, 1.0)
+        ]
+        Indices: (array([0, 1, 2]), array([0, 0, 0]))
+        Shape: (3, 3)
+
+        """
+        idx_nz = np.where(self.matrix != Quaternion(0, 0, 0, 0))
+        entries = self.matrix[idx_nz]
+        return entries, idx_nz, self.shape
+
+    @staticmethod
+    def from_sparse(entries, idx_nz, shape):
+        """Retrieve the object from its sparse parameters."""
+        new = np.zeros(shape, dtype=entries.dtype) + Quaternion(0, 0, 0, 0)
+        new[idx_nz] = entries
+        return QMatrix.from_matrix(new)
 
     @property
     def shape(self):

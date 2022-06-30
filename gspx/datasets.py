@@ -1,6 +1,7 @@
 """Some useful datasets."""
 import pathlib
 import pandas as pd
+import numpy as np
 
 from gspx.utils.graph import nearest_neighbors
 from gspx.signals import QuaternionSignal
@@ -38,7 +39,7 @@ class WeatherGraphData:
         A = nearest_neighbors(
             positions,
             n_neighbors=10).todense()
-        return A, coords
+        return np.array(A), coords
 
     @property
     def signal(self):
