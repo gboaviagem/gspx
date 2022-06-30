@@ -1,5 +1,6 @@
 """Utilities for array manipulations."""
 import numpy as np
+from pyquaternion import Quaternion
 
 
 def _quaternion_mtx_assertions(M):
@@ -27,7 +28,7 @@ def explode_quaternions(M):
     # are "pyquaternion.Quaternion"-valued
     n, m = M.shape
     mat = np.zeros((n, m, 4))
-    idx = np.where(M != 0)
+    idx = np.where(M != Quaternion(0, 0, 0, 0))
     for xi, yi in zip(idx[0], idx[1]):
         q = M[xi, yi]
         mat[xi, yi, 1:] = q.vector

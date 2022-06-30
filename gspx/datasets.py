@@ -39,7 +39,8 @@ class WeatherGraphData:
         A = nearest_neighbors(
             positions,
             n_neighbors=10).todense()
-        return np.array(A), coords
+        A = np.array(A) + np.array(A).T
+        return A, coords
 
     @property
     def signal(self):
