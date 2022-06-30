@@ -2,6 +2,9 @@
 import pathlib
 import pandas as pd
 
+from gspx.utils.graph import nearest_neighbors
+from gspx.signals import QuaternionSignal
+
 
 def uk_weather():
     """Fetch the dataframe with weather data in UK.
@@ -21,3 +24,33 @@ def uk_weather():
         pathlib.Path(__file__).parent.parent /
         "resources/uk_weather_at_20Apr202213pm.gz")
     return pd.read_csv(fn, sep="\t")
+
+
+class WeatherGraphData:
+    """Build the graph and signal from UK weather data."""
+
+    @property
+    def graph(self):
+        """Create the graph of UK cities and weather signal."""
+        df = uk_weather()
+        positions = df[['longitude', 'latitude']].to_numpy()
+        coords = df[['longitude', 'latitude']].to_numpy()
+        A = nearest_neighbors(
+            positions,
+            n_neighbors=10).todense()
+        return A, coords
+
+    @property
+    def signal(self):
+        """Create the graph signal with weather data."""
+        df = uk_weather()
+        df_ = df[['humidity', 'pressure', 'temp', 'wind_speed']]
+        weather_data = (
+            (df_ - df_.min()) /
+            (df_.max() - df_.min())
+        ).to_numpy()
+
+        s = QuaternionSignal([
+            dict(array=row) for row in weather_data
+        ])
+        return s

@@ -166,7 +166,7 @@ def make_sensor(N, n_neighbors=5, seed=42, directed=False):
            [0.43194502, 0.29122914]])
 
     """
-    rnd = np.random.RandomState(seed=42)
+    rnd = np.random.default_rng(seed)
     coords = rnd.uniform(low=0.0, high=1.0, size=(N, 2))
     A = nearest_neighbors(coords, n_neighbors=n_neighbors)
     A = A.toarray()
@@ -291,7 +291,7 @@ def adj_matrix_from_coords_limited(coords, limit, theta=1, verbose=False):
         Variance of the gaussian weight distribution.
 
     """
-    [N, M] = coords.shape
+    N, _ = coords.shape
     A = np.zeros((N, N))
     for i in (tqdm(np.arange(1, N)) if verbose else np.arange(1, N)):
         dist2i = np.sqrt(
