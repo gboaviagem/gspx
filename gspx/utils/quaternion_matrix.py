@@ -125,3 +125,43 @@ def complex_adjoint(M):
     ), axis=0  # vertical concatenation
     )
     return adj
+
+
+def from_exploded_to_complex(Q):
+    """Get the complex representation of a quaternion matrix.
+
+    The quaternion matrix is represented as a (N, M, 4) real-valued
+    matrix. Otherwise, call `explode_quaternions()`.
+
+    For each quaternion entry q = a + bi + cj + dk,
+    the complex representation turns it into a 2x2 matrix
+    [[a + bi, c + di], [-c + di, a - bi]].
+
+    """
+    nrows, ncols, _ = Q.shape
+
+    null = np.zeros((2 * nrows, 2 * ncols), dtype=complex)
+
+    simp = Q[:, :, 0] + 1j * Q[:, :, 1]
+    perp = Q[:, :, 2] + 1j * Q[:, :, 3]
+
+    c00 = null.copy()
+    c00[0::2, 0::2] = simp
+    c01 = null.copy()
+    c01[0::2, 1::2] = perp
+    c10 = null.copy()
+    c10[1::2, 0::2] = - perp.conjugate()
+    c11 = null.copy()
+    c11[1::2, 1::2] = simp.conjugate()
+
+    return c00 + c10 + c01 + c11
+
+
+def from_complex_to_exploded(Q):
+    """Get the exploded representation out of the complex form."""
+    return np.dstack((
+        np.real(Q[::2, ::2]),
+        np.imag(Q[::2, ::2]),
+        np.real(Q[::2, 1::2]),
+        np.imag(Q[::2, 1::2])
+    ))

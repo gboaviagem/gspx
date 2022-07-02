@@ -5,7 +5,8 @@ from pyquaternion import Quaternion
 
 from gspx.signals import QuaternionSignal
 from gspx.utils.quaternion_matrix import complex_adjoint, \
-    implode_quaternions, conjugate
+    implode_quaternions, conjugate, explode_quaternions, \
+    from_complex_to_exploded, from_exploded_to_complex
 from gspx.utils.display import visualize_quat_mtx
 
 
@@ -151,7 +152,15 @@ class QMatrix:
     def __mul__(self, other):
         """Multiply."""
         if isinstance(other, QMatrix):
-            return QMatrix.from_matrix(self.matrix @ other.matrix)
+            # We use multiplication between the complex representations
+            # of each quaternion matrix
+            prod = from_exploded_to_complex(
+                explode_quaternions(self.matrix)
+            ) @ from_exploded_to_complex(
+                explode_quaternions(other.matrix)
+            )
+            prodq = implode_quaternions(from_complex_to_exploded(prod))
+            return QMatrix.from_matrix(prodq)
 
         return QMatrix.from_matrix(self.matrix * other)
 
@@ -208,12 +217,13 @@ class QMatrix:
 class QGFT:
     """Quaternion-valued Graph Fourier Transform."""
 
-    def __init__(self, verbose=True):
+    def __init__(self, verbose=True, sort=True):
         """Construct."""
         self.verbose = verbose
         self.eigq = None
         self.eigc = None
         self.Vq = None
+        self.sort = sort
         self.idx_freq = None
         self.tv_ = None
 
@@ -243,8 +253,9 @@ class QGFT:
         self.eigc = new.to_array()[:, 0] + 1j * new.to_array()[:, 1]
 
         # Frequency ordering
-        self.inform("Sorting the frequencies based on Total Variation.")
-        self.idx_freq, self.tv_ = self.sort_frequencies(shift_operator)
+        if self.sort:
+            self.inform("Sorting the frequencies based on Total Variation.")
+            self.idx_freq, self.tv_ = self.sort_frequencies(shift_operator)
 
         return self
 
