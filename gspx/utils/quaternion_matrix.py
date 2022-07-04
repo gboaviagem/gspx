@@ -165,3 +165,21 @@ def from_complex_to_exploded(Q):
         np.real(Q[::2, 1::2]),
         np.imag(Q[::2, 1::2])
     ))
+
+
+def quaternion_array(arr, def_real_part=1.0, dtype=float):
+    """Create a quaternion 1D array out of an (N, 4) real-valued array."""
+    dims = np.array(arr).shape
+    assert len(dims) == 2 and dims[1] in [3, 4], (
+        "Please provide a (N, 3) or (N, 4) array-like object."
+    )
+    if dims[1] == 3:
+        # If the quaternion real part is not provided, we set it to
+        # 1, for the sake of convenience with color image signals.
+        arr = np.hstack((
+            np.full((dims[0], 1), fill_value=def_real_part, dtype=dtype),
+            arr
+        ))
+    return np.array([
+        Quaternion(array=row) for row in arr
+    ])

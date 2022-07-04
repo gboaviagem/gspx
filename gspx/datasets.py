@@ -52,7 +52,5 @@ class WeatherGraphData:
             (df_.max() - df_.min())
         ).to_numpy()
 
-        s = QuaternionSignal([
-            dict(array=row) for row in weather_data
-        ])
+        s = QuaternionSignal.from_rectangular(weather_data)
         return s

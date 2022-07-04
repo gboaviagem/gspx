@@ -3,11 +3,11 @@
 import numpy as np
 from pyquaternion import Quaternion
 
-from gspx.signals import QuaternionSignal
 from gspx.utils.quaternion_matrix import complex_adjoint, \
     implode_quaternions, conjugate, explode_quaternions, \
     from_complex_to_exploded, from_exploded_to_complex
 from gspx.utils.display import visualize_quat_mtx
+from gspx.utils.quaternion_matrix import quaternion_array
 
 
 class QMatrix:
@@ -15,9 +15,10 @@ class QMatrix:
 
     Parameters
     ----------
-    tup : sequence of 2D arrays
+    tup : sequence of 4 arrays with same shape
         The arrays must have the same shape and the sequence
-        must contain no more than 4 arrays.
+        must contain no more than 4 arrays. Each array
+        contains one of the 4 quaternion dimensions.
 
     Attribute
     ---------
@@ -30,23 +31,24 @@ class QMatrix:
 
     """
 
-    def __init__(self, tup):
+    matrix = None
+
+    def __init__(self, tup=None):
         """Construct."""
+        if tup is None:
+            return
         assert isinstance(tup, (list, tuple)) and len(tup) <= 4
         shape = tup[0].shape
         arrays = list(tup)
         while len(arrays) < 4:
             arrays.append(np.zeros(shape))
-
-        QS = QuaternionSignal.from_rectangular(np.hstack(
-            tuple(arr.ravel()[:, np.newaxis] for arr in arrays)
-        ))
-        self.matrix = QS.samples.reshape(shape)
+        if tup is not None:
+            self.matrix = quaternion_array(np.vstack(arrays).transpose())
 
     @staticmethod
     def from_matrix(qmatrix):
         """Instantiate an object with the given quaternion matrix."""
-        new = QMatrix([np.ones(qmatrix.shape)] * 4)
+        new = QMatrix()
         new.matrix = qmatrix
         return new
 
@@ -92,6 +94,17 @@ class QMatrix:
         new[idx_nz] = entries
         return QMatrix.from_matrix(new)
 
+    @staticmethod
+    def vander(signal, deg, increasing=True):
+        """Create a Vandermonde quaternion matrix."""
+        assert len(signal.matrix) == len(signal.matrix.ravel()), (
+            "Provide a QMatrix column vector or a QuaternionSignal."
+        )
+        arr = signal.matrix.ravel()
+        mat = np.vander(arr, N=deg, increasing=increasing)
+        mat[:, 0] = [Quaternion(1, 0, 0, 0) for _ in arr]
+        return QMatrix.from_matrix(mat)
+
     @property
     def shape(self):
         """Get the matrix shape."""
@@ -126,9 +139,10 @@ class QMatrix:
         """Copy of the object."""
         return QMatrix.from_matrix(self.matrix)
 
-    def visualize(self, dpi=150):
+    @staticmethod
+    def visualize(obj, dpi=150):
         """Visualize the quaternion matrix."""
-        visualize_quat_mtx(self.matrix, dpi=dpi)
+        visualize_quat_mtx(obj.matrix, dpi=dpi)
 
     def __repr__(self):
         """Represent as string."""
@@ -176,6 +190,11 @@ class QMatrix:
         """Get item."""
         return QMatrix.from_matrix(self.matrix[key])
 
+    def hadamard(self, other):
+        """Perform element-wise product."""
+        assert self.matrix.shape == other.matrix.shape
+        return QMatrix.from_matrix(self.matrix * other.matrix)
+
     def eigendecompose(self):
         """Eigendecompose the input matrix.
 
@@ -210,6 +229,7 @@ class QMatrix:
             np.real(eig[mask]) * Quaternion(1, 0, 0, 0) +
             np.imag(eig[mask]) * Quaternion(0, 1, 0, 0)
         )
+        eigq = QMatrix.from_matrix(eigq[:, np.newaxis])
 
         return eigq, QMatrix.from_matrix(Vq)
 
@@ -247,10 +267,10 @@ class QGFT:
         self.inform("Running eigendecomposition of the shift operator.")
         self.eigq, self.Vq = shift_operator.eigendecompose()
 
-        new = QuaternionSignal()
-        new.samples = self.eigq
         # Storing a complex-valued copy of the quaternionic eigenvalues
-        self.eigc = new.to_array()[:, 0] + 1j * new.to_array()[:, 1]
+        self.eigc = (
+            explode_quaternions(self.eigq.matrix)[:, :, 0] +
+            1j * explode_quaternions(self.eigq.matrix)[:, :, 1])
 
         # Frequency ordering
         if self.sort:
@@ -286,13 +306,8 @@ class QGFT:
         signal : np.ndarray, shape=(N,)
 
         """
-        s = signal.samples if isinstance(signal, QuaternionSignal) else signal
-        assert isinstance(s, np.ndarray), (
-            "The signal is expected to be a Numpy 1D array."
+        assert len(signal.matrix) == len(signal.matrix.ravel()), (
+            "Provide a QMatrix column vector or a QuaternionSignal."
         )
-        ss = self.Vq.matrix @ s.ravel()[:, np.newaxis]
-        if isinstance(signal, QuaternionSignal):
-            new = QuaternionSignal()
-            new.samples = ss
-            ss = new
+        ss = self.Vq * signal
         return ss

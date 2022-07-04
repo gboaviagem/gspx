@@ -2,41 +2,44 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-
 from pyquaternion import Quaternion
+
+from gspx.qgsp import QMatrix
 from gspx.base import Signal
+from gspx.utils.quaternion_matrix import quaternion_array
 
 
-class QuaternionSignal(Signal):
+class QuaternionSignal(QMatrix, Signal):
     """Representation of a 1D quaternion-valued signal.
 
     Parameters
     ----------
-    values : list of dict
-        List containing data to instantiate one pyquaternion.Quaternion
-        at a time. The data consist of many dicts with keys being
-        keyword arguments of the pyquaternion.Quaternion class.
-        Options of keys for each method of instantiation:
+    tup : sequence of 4 array-like instances with same shape
+        The arrays must have the same shape and the sequence
+        must contain no more than 4 arrays. Each array
+        contains one of the 4 quaternion dimensions.
+        For example, the quaternion signal
 
-        - "scalar" and "vector"
-        - "real" and "imaginary"
-        - "axis" and "radians", or "degree", or "angle"
-        - "array"
-        - "matrix"
+        >>> [1 + 0i + 3j + 4k, 2 + 5i + 3j + 7k]
+
+        is created through
+
+        >>> QuaternionSignal([
+        ...     (1, 2),
+        ...     (0, 5),
+        ...     (3, 3),
+        ...     (4, 7)
+        ... ])
+
+        or even through
+
+        >>> QuaternionSignal.from_rectangular([[1, 0, 3, 4], [2, 5, 3, 7]])
 
     """
 
-    samples = None
-
-    def __init__(self, values=None):
+    def __init__(self, tup=None):
         """Construct."""
-        if isinstance(values, dict):
-            values = [values]
-
-        if values is not None:
-            self.samples = np.array([
-                Quaternion(**kwargs) for kwargs in values
-            ])
+        QMatrix.__init__(self, tup=tup)
 
     def conjugate(self, inplace=False):
         """Return the conjugate of samples.
@@ -53,17 +56,15 @@ class QuaternionSignal(Signal):
         >>> arr = [[1, 2, 3, 4], [2, -3, -4, 1]]
         >>> s = QuaternionSignal.from_rectangular(arr)
         >>> q = s.conjugate(inplace=False)
-        >>> q.samples.tolist()
+        >>> q.matrix.ravel()
         [Quaternion(1.0, -2.0, -3.0, -4.0), Quaternion(2.0, 3.0, 4.0, -1.0)]
 
         """
-        new_samples = np.array([q.conjugate for q in self.samples])
+        new_samples = np.array([q.conjugate for q in self.matrix.ravel()])
         if inplace:
-            self.samples = new_samples
+            self.matrix = new_samples[:, np.newaxis]
         else:
-            new = QuaternionSignal()
-            new.samples = new_samples
-            return new
+            return QuaternionSignal.from_samples(new_samples)
 
     def involution(self, axis="i", inplace=False):
         """Compute the involution of each sample by a given axis.
@@ -73,7 +74,7 @@ class QuaternionSignal(Signal):
         axis : array-like of shape=(4,) or {'i', 'j', 'k'}, default='i'
             The axis used in the involution. The unit quaternion `mu`
             in the given axis is used in the computation
-            `- mu * self.samples * mu`. The default is [0, 1, 0, 0].
+            `- mu * self.matrix * mu`. The default is [0, 1, 0, 0].
         inplace : bool, default=False
             Whether the involution will affect the object samples, or
             will create a new instance.
@@ -84,7 +85,7 @@ class QuaternionSignal(Signal):
         >>> arr = [[1, 2, 3, 4], [2, -3, -4, 1]]
         >>> s = QuaternionSignal.from_rectangular(arr)
         >>> q = s.involution("i", inplace=False)
-        >>> q.samples.tolist()
+        >>> q.matrix.ravel()
         [Quaternion(1.0, 2.0, -3.0, -4.0), Quaternion(2.0, -3.0, 4.0, -1.0)]
 
         """
@@ -102,18 +103,18 @@ class QuaternionSignal(Signal):
             )
 
         mu = Quaternion(axis).unit
-        new_samples = np.array([- mu * q * mu for q in self.samples])
+        new_samples = np.array([- mu * q * mu for q in self.matrix])
         if inplace:
-            self.samples = new_samples
+            self.matrix = new_samples
         else:
-            new = QuaternionSignal()
-            new.samples = new_samples
-            return new
+            return QuaternionSignal.from_samples(new_samples)
 
-    @property
-    def shape(self):
-        """Return the shape of the array of samples."""
-        return self.samples.shape
+    @staticmethod
+    def from_samples(new_samples):
+        """Create an instance out of a quaternionic array."""
+        new = QuaternionSignal()
+        new.matrix = new_samples[:, np.newaxis]
+        return new
 
     @staticmethod
     def from_rectangular(arr, def_real_part=1.0, dtype=None):
@@ -124,18 +125,16 @@ class QuaternionSignal(Signal):
         arr : array-like, shape=(N, 4)
 
         """
-        dims = np.array(arr).shape
-        assert len(dims) == 2 and dims[1] in [3, 4], (
-            "Please provide a (N, 3) or (N, 4) array-like object."
+        samples = quaternion_array(
+            arr, def_real_part=def_real_part, dtype=dtype)
+        return QuaternionSignal.from_samples(samples)
+
+    @staticmethod
+    def from_equal_dimensions(arr):
+        """Create a QuaternionSignal in which all dimensions are equal."""
+        return QuaternionSignal.from_rectangular(
+            np.hstack([arr.ravel()[:, np.newaxis]] * 4)
         )
-        if dims[1] == 3:
-            # If the quaternion real part is not provided, we set it to
-            # 1, for the sake of convenience with color image signals.
-            arr = np.hstack((
-                np.full((dims[0], 1), fill_value=def_real_part, dtype=dtype),
-                arr
-            ))
-        return QuaternionSignal([dict(array=row) for row in arr])
 
     def to_array(self, max_value=None, **kwargs):
         """Create a pure-numpy array representation.
@@ -154,7 +153,7 @@ class QuaternionSignal(Signal):
 
         """
         out = np.array([
-            [a[0], a[1], a[2], a[3]] for a in self.samples
+            [a[0], a[1], a[2], a[3]] for a in self.matrix.ravel()
         ])
         if max_value == 'self':
             max_value = out.max()
@@ -164,23 +163,7 @@ class QuaternionSignal(Signal):
 
     def __len__(self):
         """Compute length."""
-        return len(self.samples)
-
-    def __add__(self, other):
-        """Add."""
-        new = QuaternionSignal()
-        new.samples = self.samples + other
-        return new
-
-    def __mul__(self, other):
-        """Multiply."""
-        new = QuaternionSignal()
-        new.samples = self.samples * other
-        return new
-
-    def __sub__(self, other):
-        """Subtract."""
-        return self + (-1 * other)
+        return len(self.matrix)
 
     def to_rgb(self, **kwargs):
         """RGB (normalized) representation of the signal. Real part ignored."""
@@ -201,9 +184,10 @@ class QuaternionSignal(Signal):
         rgba[:, 3] = normalize(arr[:, 0].copy())
         return rgba
 
-    def visualize(self, dpi=100, **kwargs):
+    @staticmethod
+    def show(obj, dpi=100, **kwargs):
         """Visualize the signal quaternion dimensions."""
-        arr = self.to_array()
+        arr = QuaternionSignal.from_samples(obj.matrix.ravel()).to_array()
         _, axs = plt.subplots(2, 2, dpi=dpi)
         titles = ["Real part", "i-component", "j-component", "k-component"]
         colors = ["tab:blue", "tab:orange", "tab:green", "tab:red"]

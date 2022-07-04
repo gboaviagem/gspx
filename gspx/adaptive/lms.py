@@ -78,7 +78,7 @@ class LMS:
             res[lr] = dict(result=theta, cost=J)
 
         self.res_ = res
-        idx_lower_cost = np.argmin([v['cost'][-1] for k, v in res.items()])
+        idx_lower_cost = np.argmin([v['cost'][-1] for _, v in res.items()])
         self.best_lr_ = self.alpha[idx_lower_cost]
 
         return self
