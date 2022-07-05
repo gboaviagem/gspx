@@ -185,9 +185,13 @@ class QuaternionSignal(QMatrix, Signal):
         return rgba
 
     @staticmethod
-    def show(obj, dpi=100, **kwargs):
+    def show(obj, dpi=100, ordering=None, **kwargs):
         """Visualize the signal quaternion dimensions."""
-        arr = QuaternionSignal.from_samples(obj.matrix.ravel()).to_array()
+        arr1D = obj.matrix.ravel()
+        if ordering is not None:
+            assert isinstance(ordering, (np.ndarray, list))
+            arr1D = arr1D[ordering]
+        arr = QuaternionSignal.from_samples(arr1D).to_array()
         _, axs = plt.subplots(2, 2, dpi=dpi)
         titles = ["Real part", "i-component", "j-component", "k-component"]
         colors = ["tab:blue", "tab:orange", "tab:green", "tab:red"]
