@@ -11,9 +11,7 @@ This package aims to implement an extension of [graph signal processing (GSP)](h
 # Getting started
 
 - [x] [Quaternion matrices](./gspx/utils/README.md)
-- [ ] Quaternion graph signal (QGS) visualization
-- [ ] QGS filtering
-- [ ] Filter design with QLMS
+- [x] [Filter design using QLMS, noise removal and signal visualization](./notebooks/04_qlms.ipynb)
 
 ## Instalation
 
