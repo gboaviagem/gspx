@@ -146,6 +146,7 @@ confidence=HIGH,
 # --disable=W".
 disable=raw-checker-failed,
         invalid-name,
+        wrong-import-position,
         bad-inline-option,
         locally-disabled,
         file-ignored,
