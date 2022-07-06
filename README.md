@@ -10,8 +10,14 @@ This package aims to implement an extension of [graph signal processing (GSP)](h
 
 # Getting started
 
-- [x] [Quaternion matrices](./gspx/utils/README.md)
-- [x] [Filter design using QLMS, noise removal and signal visualization](./notebooks/04_qlms.ipynb)
+The tutorial that best demonstrate the use of *quaternion graph signal processing* (QGSP) using `gspx`
+is the following:
+
+- [FIR low-pass filter design on quaternion-weighted graph](./notebooks/04_qlms.ipynb)
+
+The reader may dive deep into more tools in `gspx` through these guided examples:
+
+- [Quaternion matrices](./gspx/utils/README.md)
 
 ## Instalation
 

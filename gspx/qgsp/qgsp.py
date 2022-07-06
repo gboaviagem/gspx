@@ -1,7 +1,9 @@
 """Utils related to Quaternion-GSP."""
 
+from ast import Assert
 import numpy as np
 from pyquaternion import Quaternion
+import sys
 
 from gspx.utils.quaternion_matrix import complex_adjoint, \
     implode_quaternions, conjugate, explode_quaternions, \
@@ -233,6 +235,33 @@ class QMatrix:
 
         return eigq, QMatrix.from_matrix(Vq)
 
+    def inv(self, rtol=1e-05, atol=1e-08):
+        """Compute the matrix inverse, if exists."""
+        ca = self.complex_adjoint
+        assert np.linalg.cond(ca) < 1 / sys.float_info.epsilon, (
+            "The given matrix is not invertible."
+        )
+        nrows, _ = ca.shape
+        n = int(nrows / 2)
+        ca_inv = np.linalg.inv(ca)
+        inv00 = ca_inv[:n, :n]
+        inv01 = ca_inv[:n, n:]
+        inv10 = ca_inv[n:, :n]
+        inv11 = ca_inv[n:, n:]
+
+        # Checking if the inverse of the complex adjoint also has the form
+        # of a complex adjoint
+        assert np.allclose(inv00, inv11.conjugate(), rtol=rtol, atol=atol)
+        assert np.allclose(inv01, - inv10.conjugate(), rtol=rtol, atol=atol)
+
+        qmatrix = implode_quaternions(np.dstack((
+            np.real(inv00),
+            np.imag(inv00),
+            np.real(inv01),
+            np.imag(inv01),
+        )))
+        return QMatrix.from_matrix(qmatrix)
+
 
 class QGFT:
     """Quaternion-valued Graph Fourier Transform."""
@@ -243,6 +272,7 @@ class QGFT:
         self.eigq = None
         self.eigc = None
         self.Vq = None
+        self.Vq_inv = None
         self.sort = sort
         self.idx_freq = None
         self.tv_ = None
@@ -266,6 +296,11 @@ class QGFT:
 
         self.inform("Running eigendecomposition of the shift operator.")
         self.eigq, self.Vq = shift_operator.eigendecompose()
+        try:
+            self.Vq_inv = self.Vq.inv()
+        except AssertionError as e:
+            self.inform(
+                f"The eigenvector matrix could not be inverted: {e}.")
 
         # Storing a complex-valued copy of the quaternionic eigenvalues
         self.eigc = (
@@ -296,7 +331,14 @@ class QGFT:
         signal : np.ndarray, shape=(N,)
 
         """
-        raise NotImplementedError("The direct QGFT is not yet implemented.")
+        assert self.Vq_inv is not None, (
+            "The eigenvector matrix was not inverted."
+        )
+        assert len(signal.matrix) == len(signal.matrix.ravel()), (
+            "Provide a QMatrix column vector or a QuaternionSignal."
+        )
+        ss = self.Vq_inv * signal
+        return ss
 
     def inverse_transform(self, signal):
         """Apply the inverse QGFT.
