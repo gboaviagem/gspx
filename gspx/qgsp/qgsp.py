@@ -1,15 +1,13 @@
 """Utils related to Quaternion-GSP."""
 
-from ast import Assert
+import sys
 import numpy as np
 from pyquaternion import Quaternion
-import sys
 
 from gspx.utils.quaternion_matrix import complex_adjoint, \
     implode_quaternions, conjugate, explode_quaternions, \
     from_complex_to_exploded, from_exploded_to_complex
 from gspx.utils.display import visualize_quat_mtx
-from gspx.utils.quaternion_matrix import quaternion_array
 
 
 class QMatrix:
@@ -17,7 +15,7 @@ class QMatrix:
 
     Parameters
     ----------
-    tup : sequence of 4 arrays with same shape
+    seq : sequence of 4 arrays with same shape
         The arrays must have the same shape and the sequence
         must contain no more than 4 arrays. Each array
         contains one of the 4 quaternion dimensions.
@@ -35,17 +33,16 @@ class QMatrix:
 
     matrix = None
 
-    def __init__(self, tup=None):
+    def __init__(self, seq=None):
         """Construct."""
-        if tup is None:
+        if seq is None:
             return
-        assert isinstance(tup, (list, tuple)) and len(tup) <= 4
-        shape = tup[0].shape
-        arrays = list(tup)
+        assert isinstance(seq, (list, tuple, np.ndarray)) and len(seq) <= 4
+        shape = np.array(seq[0]).shape
+        arrays = list(seq)
         while len(arrays) < 4:
             arrays.append(np.zeros(shape))
-        if tup is not None:
-            self.matrix = quaternion_array(np.vstack(arrays).transpose())
+        self.matrix = implode_quaternions(np.dstack(arrays))
 
     @staticmethod
     def from_matrix(qmatrix):
@@ -63,24 +60,13 @@ class QMatrix:
         >>> rnd = np.random.default_rng(seed=2)
         >>> mat = QMatrix([np.ones((3, 3)) for _ in range(4)])
         >>> mat.matrix[:, 1:] = Quaternion(0, 0, 0, 0)
-        >>> mat
-        Quaternion-valued array of shape (3, 3):
-        [[Quaternion(1.0, 1.0, 1.0, 1.0) Quaternion(0.0, 0.0, 0.0, 0.0)
-        Quaternion(0.0, 0.0, 0.0, 0.0)]
-        [Quaternion(1.0, 1.0, 1.0, 1.0) Quaternion(0.0, 0.0, 0.0, 0.0)
-        Quaternion(0.0, 0.0, 0.0, 0.0)]
-        [Quaternion(1.0, 1.0, 1.0, 1.0) Quaternion(0.0, 0.0, 0.0, 0.0)
-        Quaternion(0.0, 0.0, 0.0, 0.0)]]
-
         >>> entries, idx_nz, shape = mat.to_sparse()
+        >>> entries
+        array([Quaternion(1.0, 1.0, 1.0, 1.0), Quaternion(1.0, 1.0, 1.0, 1.0),
+               Quaternion(1.0, 1.0, 1.0, 1.0)], dtype=object)
+
         >>> print(
-        ...     f"Non-zero Entries: {entries}\nIndices: "
-        ...     f"{idx_nz}\nShape: {shape}")
-        Non-zero Entries: [
-            Quaternion(1.0, 1.0, 1.0, 1.0)
-            Quaternion(1.0, 1.0, 1.0, 1.0)
-            Quaternion(1.0, 1.0, 1.0, 1.0)
-        ]
+        ...     f"Indices: {idx_nz}\nShape: {shape}")
         Indices: (array([0, 1, 2]), array([0, 0, 0]))
         Shape: (3, 3)
 

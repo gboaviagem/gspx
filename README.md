@@ -13,11 +13,12 @@ This package aims to implement an extension of [graph signal processing (GSP)](h
 The tutorial that best demonstrate the use of *quaternion graph signal processing* (QGSP) using `gspx`
 is the following:
 
-- [FIR low-pass filter design on quaternion-weighted graph](./notebooks/04_qlms.ipynb)
+- [FIR low-pass filter design on quaternion-weighted graph](./notebooks/qlms.ipynb)
 
 The reader may dive deep into more tools in `gspx` through these guided examples:
 
 - [Quaternion matrices](./gspx/utils/README.md)
+- [FIR low-pass filter design on *real-weighted* graph](./notebooks/lms.ipynb)
 
 ## Instalation
 
@@ -43,7 +44,7 @@ bash install.sh
 
 ## Running unit tests locally
 
-When unit tests are implemented, one may run using `pytest`:
+One may run the unit tests by using `pytest`:
 ```sh
 python -m pytest --cov=gspx .
 ```

@@ -10,39 +10,46 @@ from gspx.utils.quaternion_matrix import quaternion_array
 
 
 class QuaternionSignal(QMatrix, Signal):
-    """Representation of a 1D quaternion-valued signal.
+    r"""Representation of a 1D quaternion-valued signal.
 
     Parameters
     ----------
-    tup : sequence of 4 array-like instances with same shape
-        The arrays must have the same shape and the sequence
-        must contain no more than 4 arrays. Each array
-        contains one of the 4 quaternion dimensions.
-        For example, the quaternion signal
+    seq : sequence of 4 sequences of real numbers with same length
+        Each sequence corresponds to a quaternion dimension: first the
+        sequence of real parts, then the sequence of "i" coefficients,
+        then the "j" coefficients, and finally the "k" coefficients.
 
-        >>> [1 + 0i + 3j + 4k, 2 + 5i + 3j + 7k]
+    Example
+    -------
+    >>> # In order to create the array [1 + 0i + 3j + 4k, 2 + 5i + 3j + 7k]
+    >>> # one may call
+    >>> QuaternionSignal([
+    ...     (1, 2),
+    ...     (0, 5),
+    ...     (3, 3),
+    ...     (4, 7)
+    ... ])
+    \x1B[3mQuaternion-valued array of shape (2, 1):\x1B[0m
+    [[Quaternion(1.0, 0.0, 3.0, 4.0)]
+     [Quaternion(2.0, 5.0, 3.0, 7.0)]]
 
-        is created through
-
-        >>> QuaternionSignal([
-        ...     (1, 2),
-        ...     (0, 5),
-        ...     (3, 3),
-        ...     (4, 7)
-        ... ])
-
-        or even through
-
-        >>> QuaternionSignal.from_rectangular([[1, 0, 3, 4], [2, 5, 3, 7]])
+    >>> # or even through
+    >>> QuaternionSignal.from_rectangular([[1, 0, 3, 4], [2, 5, 3, 7]])
+    \x1B[3mQuaternion-valued array of shape (2, 1):\x1B[0m
+    [[Quaternion(1.0, 0.0, 3.0, 4.0)]
+     [Quaternion(2.0, 5.0, 3.0, 7.0)]]
 
     """
 
-    def __init__(self, tup=None):
+    def __init__(self, seq=None):
         """Construct."""
-        QMatrix.__init__(self, tup=tup)
+        if seq is not None:
+            assert len(set([len(s) for s in seq])) == 1
+            seq = [np.array(s)[:, np.newaxis] for s in seq]
+        QMatrix.__init__(self, seq=seq)
 
     def conjugate(self, inplace=False):
-        """Return the conjugate of samples.
+        r"""Return the conjugate of samples.
 
         Parameters
         ----------
@@ -52,12 +59,14 @@ class QuaternionSignal(QMatrix, Signal):
 
         Example
         -------
-        >>> from gspx.signals import QuaternionSignal
-        >>> arr = [[1, 2, 3, 4], [2, -3, -4, 1]]
-        >>> s = QuaternionSignal.from_rectangular(arr)
-        >>> q = s.conjugate(inplace=False)
-        >>> q.matrix.ravel()
-        [Quaternion(1.0, -2.0, -3.0, -4.0), Quaternion(2.0, 3.0, 4.0, -1.0)]
+        >>> s = QuaternionSignal.from_rectangular([
+        ...     [1, 2, 3, 4],
+        ...     [2, -3, -4, 1]
+        ... ])
+        >>> s.conjugate(inplace=False)
+        \x1B[3mQuaternion-valued array of shape (2, 1):\x1B[0m
+        [[Quaternion(1.0, -2.0, -3.0, -4.0)]
+         [Quaternion(2.0, 3.0, 4.0, -1.0)]]
 
         """
         new_samples = np.array([q.conjugate for q in self.matrix.ravel()])
@@ -67,7 +76,7 @@ class QuaternionSignal(QMatrix, Signal):
             return QuaternionSignal.from_samples(new_samples)
 
     def involution(self, axis="i", inplace=False):
-        """Compute the involution of each sample by a given axis.
+        r"""Compute the involution of each sample by a given axis.
 
         Parameters
         ----------
@@ -84,9 +93,10 @@ class QuaternionSignal(QMatrix, Signal):
         >>> from gspx.signals import QuaternionSignal
         >>> arr = [[1, 2, 3, 4], [2, -3, -4, 1]]
         >>> s = QuaternionSignal.from_rectangular(arr)
-        >>> q = s.involution("i", inplace=False)
-        >>> q.matrix.ravel()
-        [Quaternion(1.0, 2.0, -3.0, -4.0), Quaternion(2.0, -3.0, 4.0, -1.0)]
+        >>> s.involution("i", inplace=False)
+        \x1B[3mQuaternion-valued array of shape (2, 1):\x1B[0m
+        [[Quaternion(1.0, 2.0, -3.0, -4.0)]
+         [Quaternion(2.0, -3.0, 4.0, -1.0)]]
 
         """
         if axis == "i":
@@ -102,10 +112,11 @@ class QuaternionSignal(QMatrix, Signal):
                 "ordinary basis for pure quaternions."
             )
 
+        shape = self.matrix.shape
         mu = Quaternion(axis).unit
-        new_samples = np.array([- mu * q * mu for q in self.matrix])
+        new_samples = np.array([- mu * q * mu for q in self.matrix.ravel()])
         if inplace:
-            self.matrix = new_samples
+            self.matrix = new_samples.reshape(shape)
         else:
             return QuaternionSignal.from_samples(new_samples)
 

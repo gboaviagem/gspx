@@ -1,6 +1,8 @@
+"""Unit testing manipulation of QuaternionSignal."""
 import pytest
-from gspx.signals import QuaternionSignal
 from pyquaternion import Quaternion
+
+from gspx.signals import QuaternionSignal
 from gspx.datasets import uk_weather
 
 
@@ -36,7 +38,7 @@ def test_from_rectangular(arr):
         Quaternion(9.0, 0.0, 0.0, 0.0),
         Quaternion(9.0, 5.0, 8.0, 6.0),
         Quaternion(0.0, 7.0, 8.0, 7.0)]
-    assert set(s.samples.tolist()) == set(expected)
+    assert set(s.matrix.ravel().tolist()) == set(expected)
 
 
 @pytest.mark.parametrize("axis,out_samples", [
@@ -103,10 +105,10 @@ def test_involution(arr, axis, out_samples):
     s = QuaternionSignal.from_rectangular(arr)
     q = s.involution(axis, inplace=False)
 
-    assert set(q.samples.tolist()) == set(out_samples)
+    assert set(q.matrix.ravel().tolist()) == set(out_samples)
 
     s.involution(axis, inplace=True)
-    assert set(s.samples.tolist()) == set(out_samples)
+    assert set(s.matrix.ravel().tolist()) == set(out_samples)
 
 
 def test_uk_weather():
@@ -115,4 +117,4 @@ def test_uk_weather():
     s = QuaternionSignal.from_rectangular(
         df[['wind_speed', 'humidity', 'pressure', 'temp']].to_numpy()
     )
-    assert s.shape == (177,)
+    assert s.shape == (177, 1)

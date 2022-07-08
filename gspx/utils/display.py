@@ -65,6 +65,8 @@ def plot_graph(
             - with_labels; default=False
 
     """
+    from gspx.signals import QuaternionSignal
+
     if isinstance(colors, np.ndarray) and len(colors.shape) == 1:
         # We create a pseudocolor signal
         cmap_name = 'viridis' if colormap is None else colormap
