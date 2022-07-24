@@ -34,7 +34,7 @@ def create_quaternion_weights(A, df, icols, jcols, kcols, gauss_den=10):
 
     """
     idx_nz = np.where(A != 0)
-    entries = A[idx_nz]
+    entries = np.array(A[idx_nz]).ravel()
     shape = A.shape
 
     cols = icols + jcols + kcols
