@@ -203,7 +203,7 @@ class QuaternionSignal(QMatrix, Signal):
             assert isinstance(ordering, (np.ndarray, list))
             arr1D = arr1D[ordering]
         arr = QuaternionSignal.from_samples(arr1D).to_array()
-        _, axs = plt.subplots(2, 2, dpi=dpi)
+        fig, axs = plt.subplots(2, 2, dpi=dpi)
         titles = ["Real part", "i-component", "j-component", "k-component"]
         colors = ["tab:blue", "tab:orange", "tab:green", "tab:red"]
         params = dict(
@@ -217,3 +217,4 @@ class QuaternionSignal(QMatrix, Signal):
             axs[int(i > 1), i % 2].set_title(titles[i])
         plt.subplots_adjust(wspace=0.5, hspace=0.5)
         plt.show()
+        return fig
