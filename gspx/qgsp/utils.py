@@ -3,9 +3,14 @@ import numpy as np
 from tqdm import tqdm
 from pyquaternion import Quaternion
 from gspx.qgsp.qgsp import QMatrix
+import pandas as pd
+from typing import Union
 
 
-def create_quaternion_weights(A, df, icols, jcols, kcols, gauss_den=10):
+def create_quaternion_weights(
+        A: np.ndarray, df: pd.DataFrame,
+        icols: list, jcols: list, kcols: list,
+        gauss_den: Union[int, float] = 10) -> QMatrix:
     """Populate a weighted adjacency matrix with quaternions.
 
     It is assumed that `A` is a weighted adjacency matrix
@@ -42,6 +47,7 @@ def create_quaternion_weights(A, df, icols, jcols, kcols, gauss_den=10):
     y = idx_nz[1]
     entriesq = []
     df_ = df[cols]
+    remove_idx = []
     for i, entry in enumerate(tqdm(entries)):
         diff = (df_.iloc[x[i], :] - df_.iloc[y[i], :]).abs()
         q = Quaternion(
@@ -50,7 +56,16 @@ def create_quaternion_weights(A, df, icols, jcols, kcols, gauss_den=10):
             np.linalg.norm(diff[jcols]),
             np.linalg.norm(diff[kcols])
         )
-        entriesq.append(Quaternion.exp(q / gauss_den).inverse)
+        exp_ = Quaternion.exp(q / gauss_den)
+        if exp_.norm > 1e-7:
+            entriesq.append(exp_.inverse)
+        else:
+            remove_idx.append(i)
+
+    idx_nz = (
+        np.delete(idx_nz[0], remove_idx),
+        np.delete(idx_nz[1], remove_idx)
+    )
 
     Aq = QMatrix.from_sparse(np.array(entriesq), idx_nz=idx_nz, shape=shape)
     return Aq
