@@ -33,7 +33,9 @@ setup(
     install_requires=install_requires,
     packages=["gspx", "gspx.utils", "gspx.adaptive", "gspx.qgsp"],
     package_data={"gspx": [
-        "resources/jelly_beans.tiff",
+        "resources/county_data_description.json",
+        "resources/county_data.gz",
+        "resources/county_latlong.gz",
         "resources/uk_weather_at_20Apr202213pm.gz"
     ]},
 )

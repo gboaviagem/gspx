@@ -170,7 +170,7 @@ class SocialGraphData:
             return self.data_
 
         # Source: https://simplemaps.com/data/us-counties
-        path_prefix = pathlib.Path(__file__).parent.parent
+        path_prefix = pathlib.Path(__file__).parent
         df = pd.read_csv(path_prefix / "resources/county_latlong.gz")
 
         # Pruning counties outside the Contiguous United States
