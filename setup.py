@@ -31,7 +31,7 @@ setup(
     author="Guilherme Boaviagem",
     author_email="guilherme.boaviagem@gmail.com",
     install_requires=install_requires,
-    packages=["gspx"],
+    packages=["gspx", "gspx.utils", "gspx.adaptive", "gspx.qgsp"],
     package_data={"gspx": [
         "resources/jelly_beans.tiff",
         "resources/uk_weather_at_20Apr202213pm.gz"
