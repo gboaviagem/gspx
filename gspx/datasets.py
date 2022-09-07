@@ -8,6 +8,8 @@ import json
 from gspx.utils.graph import nearest_neighbors, describe
 from gspx.signals import QuaternionSignal
 
+PATH_PREFIX = pathlib.Path(__file__).parent
+
 
 def uk_weather():
     """Fetch the dataframe with weather data in UK.
@@ -23,9 +25,7 @@ def uk_weather():
     df : pd.DataFrame
 
     """
-    fn = (
-        pathlib.Path(__file__).parent.parent /
-        "resources/uk_weather_at_20Apr202213pm.gz")
+    fn = PATH_PREFIX / "resources/uk_weather_at_20Apr202213pm.gz"
     return pd.read_csv(fn, sep="\t")
 
 
@@ -156,9 +156,8 @@ class SocialGraphData:
 
     def describe_data(self):
         """Describe the variables in the socioeconomic dataset."""
-        path_prefix = pathlib.Path(__file__).parent.parent
         with open(
-                path_prefix / "resources/county_data_description.json",
+                PATH_PREFIX / "resources/county_data_description.json",
                 "r") as f:
             d = json.load(f)
         return d
@@ -170,8 +169,7 @@ class SocialGraphData:
             return self.data_
 
         # Source: https://simplemaps.com/data/us-counties
-        path_prefix = pathlib.Path(__file__).parent
-        df = pd.read_csv(path_prefix / "resources/county_latlong.gz")
+        df = pd.read_csv(PATH_PREFIX / "resources/county_latlong.gz")
 
         # Pruning counties outside the Contiguous United States
         df = df[df['lat'] < 52]
@@ -179,7 +177,7 @@ class SocialGraphData:
 
         # County social data. Source:
         # https://www.openintro.org/data/?data=county_complete
-        df_data = pd.read_csv(path_prefix / "resources/county_data.gz")
+        df_data = pd.read_csv(PATH_PREFIX / "resources/county_data.gz")
         df_data = df_data[[
             'fips', 'state', 'pop2017', 'median_age_2017',
             'bachelors_2017', 'median_household_income_2017',

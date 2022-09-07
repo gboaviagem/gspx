@@ -10,14 +10,16 @@ from typing import Union
 def create_quaternion_weights(
         A: np.ndarray, df: pd.DataFrame,
         icols: list, jcols: list, kcols: list,
-        gauss_den: Union[int, float] = 10) -> QMatrix:
+        gauss_den: Union[int, float] = 10,
+        hermitian: bool = True,
+        sparse_output: bool = False) -> Union[QMatrix, tuple]:
     """Populate a weighted adjacency matrix with quaternions.
 
     It is assumed that `A` is a weighted adjacency matrix
     and the features in `df` are assigned, row by row, to vertices
     in the graph.
 
-    Not very optimized!
+    Not very optimized.
 
     Parameters
     ----------
@@ -36,9 +38,23 @@ def create_quaternion_weights(
         Integer assigned to the denominator in the gaussian
         weight distribution, as in `exp(- (x) / gauss_den)`.
         It is related to the gaussian standard deviation.
+    hermitian : bool, default=True
+        If True, make the quaternion output matrix hermitian.
+    sparse_output : bool, default=True
+        If True, only the sparse data (indices and entries) are returned.
+
+    Return
+    ------
+    If `sparse_output` is True, it returns the tuple
+    `(entriesq, idx_nz, shape)`, with the quaternion-valued non-zero entries.
+    Otherwise, it returns the dense QMatrix object.
 
     """
-    idx_nz = np.where(A != 0)
+    if hermitian:
+        idx_nz = np.where(np.triu(A, k=1) != 0)
+    else:
+        idx_nz = np.where(A != 0)
+
     entries = np.array(A[idx_nz]).ravel()
     shape = A.shape
 
@@ -67,5 +83,16 @@ def create_quaternion_weights(
         np.delete(idx_nz[1], remove_idx)
     )
 
-    Aq = QMatrix.from_sparse(np.array(entriesq), idx_nz=idx_nz, shape=shape)
-    return Aq
+    if hermitian:
+        entriesq = entriesq + [q.conjugate for q in entriesq]
+        idx_nz = (
+            np.array(idx_nz[0].tolist() + idx_nz[1].tolist()),
+            np.array(idx_nz[1].tolist() + idx_nz[0].tolist())
+        )
+
+    if sparse_output:
+        return np.array(entriesq), idx_nz, shape
+    else:
+        print("Please wait while the dense quaternion matrix is assembled.")
+        return QMatrix.from_sparse(
+            np.array(entriesq), idx_nz=idx_nz, shape=shape)

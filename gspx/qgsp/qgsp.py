@@ -183,8 +183,12 @@ class QMatrix:
         assert self.matrix.shape == other.matrix.shape
         return QMatrix.from_matrix(self.matrix * other.matrix)
 
-    def eigendecompose(self):
+    def eigendecompose(self, hermitian_gso=True):
         """Eigendecompose the input matrix.
+
+        Parameters
+        ----------
+        hermitian_gso : bool, default=True
 
         Return
         ------
@@ -193,7 +197,10 @@ class QMatrix:
             Matrix with eigenvectors.
 
         """
-        eig, V = np.linalg.eig(self.complex_adjoint)
+        if hermitian_gso:
+            eig, V = np.linalg.eig(self.complex_adjoint)
+        else:
+            eig, V = np.linalg.eigh(self.complex_adjoint)
 
         mask_imag_pos = np.imag(eig) > 0
         mask_imag_null = np.imag(eig) == 0
@@ -252,9 +259,12 @@ class QMatrix:
 class QGFT:
     """Quaternion-valued Graph Fourier Transform."""
 
-    def __init__(self, verbose=True, sort=True):
+    def __init__(
+            self, verbose=True, sort=True,
+            hermitian_gso=True):
         """Construct."""
         self.verbose = verbose
+        self.hermitian_gso = hermitian_gso
         self.eigq = None
         self.eigc = None
         self.Vq = None
@@ -281,7 +291,9 @@ class QGFT:
         )
 
         self.inform("Running eigendecomposition of the shift operator.")
-        self.eigq, self.Vq = shift_operator.eigendecompose()
+        self.eigq, self.Vq = shift_operator.eigendecompose(
+            hermitian_gso=self.hermitian_gso)
+
         try:
             self.Vq_inv = self.Vq.inv()
         except AssertionError as e:
