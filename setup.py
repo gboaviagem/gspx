@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Setup to pip package."""
 
-from setuptools import setup
+from setuptools import setup, find_packages
 import json
 import os
 
@@ -31,7 +31,7 @@ setup(
     author="Guilherme Boaviagem",
     author_email="guilherme.boaviagem@gmail.com",
     install_requires=install_requires,
-    packages=["gspx", "gspx.utils", "gspx.adaptive", "gspx.qgsp"],
+    packages=find_packages(exclude=("tests",)),
     package_data={"gspx": [
         "resources/county_data_description.json",
         "resources/county_data.gz",
