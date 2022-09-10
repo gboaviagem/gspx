@@ -135,8 +135,8 @@ class QMatrix:
     def __repr__(self):
         """Represent as string."""
         msg = (
-            "\x1B[3mQuaternion-valued array of shape "
-            f"{self.shape}:\x1B[0m\n{self.matrix}"
+            "Quaternion-valued array of shape "
+            f"{self.shape}:\n{self.matrix}"
         )
         return msg
 
@@ -228,12 +228,34 @@ class QMatrix:
 
         return eigq, QMatrix.from_matrix(Vq)
 
-    def inv(self, rtol=1e-05, atol=1e-08):
+    def is_hermitian(self, tol: float = 1e-8, slice_frac: float = 0.5):
+        """Check if the quaternion matrix is hermitian.
+
+        Parameters
+        ----------
+        tol : float, default=1e-8
+            Tolerance.
+        slice_frac : float between 0 and 1, default=0.5
+            Fraction of the number of rows and columns that will be checked.
+            The idea is that we try to make this verification faster, at the
+            cost of looking only at a sample of the matrix.
+
+        """
+        if slice_frac == 1:
+            obj = self
+        else:
+            idx = np.random.permutation(len(self.matrix))
+            idx = idx[:int(slice_frac * len(idx))]
+            obj = QMatrix.from_matrix(self.matrix[idx, :][:, idx])
+        return np.all((obj - obj.conjugate().transpose()).abs() < tol)
+
+    def inv(self, rtol: float = 1e-05, atol: float = 1e-08):
         """Compute the matrix inverse, if exists."""
         ca = self.complex_adjoint
-        assert np.linalg.cond(ca) < 1 / sys.float_info.epsilon, (
-            "The given matrix is not invertible."
-        )
+        if not self.is_hermitian():
+            assert np.linalg.cond(ca) < 1 / sys.float_info.epsilon, (
+                "The given matrix is not invertible."
+            )
         nrows, _ = ca.shape
         n = int(nrows / 2)
         ca_inv = np.linalg.inv(ca)

@@ -72,66 +72,30 @@ class SocialGraphData:
     >>> # First three dataset rows
     >>> data = SocialGraphData()
     >>> print(data.data.head(3).T)
-                                            0          1          2
-    county_fips                          6037      17031      48201
-    county_ascii                  Los Angeles       Cook     Harris
-    lat                               34.3209    41.8401    29.8578
-    lng                             -118.2247   -87.8168   -95.3936
-    state                          California   Illinois      Texas
-    pop2017                        10163507.0  5211263.0  4652980.0
-    median_age_2017                      36.0       36.4       33.1
-    bachelors_2017                       31.2       37.2       30.5
-    median_household_income_2017      61015.0    59426.0    57791.0
-    unemployment_rate_2017               4.69       5.24        5.0
-    uninsured_2017                       13.3       11.1       21.2
+                                               0         1             2
+    county_fips                            37179      1081         42065
+    county_ascii                           Union       Lee     Jefferson
+    lat                                  34.9884   32.6011       41.1282
+    lng                                 -80.5307  -85.3555      -78.9994
+    state                         North Carolina   Alabama  Pennsylvania
+    pop2017                             231366.0  161604.0       43804.0
+    median_age_2017                         38.0      31.0          43.9
+    bachelors_2017                          34.0      34.9          15.8
+    median_household_income_2017         70858.0   47564.0       45342.0
+    unemployment_rate_2017                   4.0      3.91          5.61
+    uninsured_2017                           9.9       8.7           8.6
 
-    >>> data.describe_data()
-    {'state': 'State.',
-    'name': 'County name.',
-    'fips': 'FIPS code.',
-    'pop2000': '2000 population.',
-    'pop2010': '2010 population.',
-    'pop2011': '2011 population.',
-    'pop2012': '2012 population.',
-    'pop2013': '2013 population.',
-    'pop2014': '2014 population.',
-    'pop2015': '2015 population.',
-    'pop2016': '2016 population.',
-    'pop2017': '2017 population.',
-    'age_under_5_2010': 'Percent of population under 5 (2010).',
-    'age_under_5_2017': 'Percent of population under 5 (2017).',
-    'age_under_18_2010': 'Percent of population under 18 (2010).',
-    'age_over_65_2010': 'Percent of population over 65 (2010).',
-    'age_over_65_2017': 'Percent of population over 65 (2017).',
-    'median_age_2017': 'Median age (2017).',
-    'female_2010': 'Percent of population that is female (2010).',
-    'white_2010': 'Percent of population that is white (2010).',
-    'black_2010': 'Percent of population that is black (2010).',
-    'black_2017': 'Percent of population that is black (2017).',
-    'native_2010': 'Percent of population that is a Native American (2010).',
-    'native_2017': 'Percent of population that is a Native American (2017).',
-    'asian_2010': 'Percent of population that is a Asian (2010).',
-    ...
-    'uninsured_under_19_2019': (
-        'Percent of population under 19 that is uninsured (2015-2019).'),
-    'uninsured_65_and_older_2019': (
-        'Percent of population 65 and older that is uninsured (2015-2019).'),
-    'household_has_computer_2019': (
-        'Percent of households that have desktop '
-        'or laptop computer (2015-2019).'),
-    'household_has_smartphone_2019': (
-        'Percent of households that have smartphone (2015-2019).'),
-    'household_has_broadband_2019': (
-        'Percent of households that have broadband internet '
-        'subscription (2015-2019).')}
+    >>> desc = data.describe_data()
+    >>> desc['age_under_5_2010']
+    'Percent of population under 5 (2010).'
 
     >>> # Graph weighted adjacency matrix and nodes geographic coordinates
     >>> A, coords = data.graph
     >>> data.describe_graph()
-    n_nodes: 3108
-    n_edges: 3826
+    n_nodes: 1267
+    n_edges: 2357
     n_self_loops: 0
-    density: 0.0007924150183564409
+    density: 0.002938862434555137
     is_connected: True
     n_connected_components: 1
     is_directed: False
@@ -147,9 +111,13 @@ class SocialGraphData:
 
     """
 
-    def __init__(self, n_neighbors=3):
+    def __init__(self, n_neighbors=4, dec=0.3):
         """Construct."""
         self.n_neighbors = n_neighbors
+        assert dec <= 1 and dec > 0, (
+            "The decimation factor must be positive and not greater than 1."
+        )
+        self.dec = dec
         self.data_ = None
         self.A_ = None
         self.coords_ = None
@@ -174,6 +142,14 @@ class SocialGraphData:
         # Pruning counties outside the Contiguous United States
         df = df[df['lat'] < 52]
         df = df[df['lng'] > -150]
+
+        # Decimating the nodes in the denser part of the graph
+        # (longitudes greater than -102.)
+        idx = df[df['lng'] > -102].index.tolist()
+        notidx = df[df['lng'] <= -102].index.tolist()
+        rnd = np.random.RandomState(seed=42)
+        new_idx = rnd.permutation(idx)[:int(self.dec * len(idx))]
+        df = df.loc[list(new_idx) + notidx]
 
         # County social data. Source:
         # https://www.openintro.org/data/?data=county_complete

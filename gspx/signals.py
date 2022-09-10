@@ -29,13 +29,13 @@ class QuaternionSignal(QMatrix, Signal):
     ...     (3, 3),
     ...     (4, 7)
     ... ])
-    \x1B[3mQuaternion-valued array of shape (2, 1):\x1B[0m
+    Quaternion-valued array of shape (2, 1):
     [[Quaternion(1.0, 0.0, 3.0, 4.0)]
      [Quaternion(2.0, 5.0, 3.0, 7.0)]]
 
     >>> # or even through
     >>> QuaternionSignal.from_rectangular([[1, 0, 3, 4], [2, 5, 3, 7]])
-    \x1B[3mQuaternion-valued array of shape (2, 1):\x1B[0m
+    Quaternion-valued array of shape (2, 1):
     [[Quaternion(1.0, 0.0, 3.0, 4.0)]
      [Quaternion(2.0, 5.0, 3.0, 7.0)]]
 
@@ -64,7 +64,7 @@ class QuaternionSignal(QMatrix, Signal):
         ...     [2, -3, -4, 1]
         ... ])
         >>> s.conjugate(inplace=False)
-        \x1B[3mQuaternion-valued array of shape (2, 1):\x1B[0m
+        Quaternion-valued array of shape (2, 1):
         [[Quaternion(1.0, -2.0, -3.0, -4.0)]
          [Quaternion(2.0, 3.0, 4.0, -1.0)]]
 
@@ -94,7 +94,7 @@ class QuaternionSignal(QMatrix, Signal):
         >>> arr = [[1, 2, 3, 4], [2, -3, -4, 1]]
         >>> s = QuaternionSignal.from_rectangular(arr)
         >>> s.involution("i", inplace=False)
-        \x1B[3mQuaternion-valued array of shape (2, 1):\x1B[0m
+        Quaternion-valued array of shape (2, 1):
         [[Quaternion(1.0, 2.0, -3.0, -4.0)]
          [Quaternion(2.0, -3.0, 4.0, -1.0)]]
 
