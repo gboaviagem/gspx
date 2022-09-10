@@ -292,11 +292,16 @@ class QGFT:
     """Quaternion-valued Graph Fourier Transform."""
 
     def __init__(
-            self, verbose=True, sort=True,
-            hermitian_gso=True):
+            self, verbose: bool = True, sort: bool = True,
+            hermitian_gso: bool = True, norm: int = 1):
         """Construct."""
+        norm_values = [1, 2]
+        assert self.norm in norm_values, (
+            f"The norm currently must be one of the values: {norm_values}."
+        )
         self.verbose = verbose
         self.hermitian_gso = hermitian_gso
+        self.norm = norm
         self.eigq = None
         self.eigc = None
         self.Vq = None
@@ -344,13 +349,21 @@ class QGFT:
 
         return self
 
-    def sort_frequencies(self, shift_operator):
+    def sort_frequencies(self, shift_operator: QMatrix):
         """Find the eigenvalues order that sort the frequencies."""
         assert self.Vq is not None, ("One must run `fit` first.")
+
         Vq_shifted = shift_operator * self.Vq
         diff = Vq_shifted - self.Vq
-        diff_norm_squared = (diff.transpose().conjugate() * diff).diag()
-        tv = np.sqrt(np.abs(diff_norm_squared).astype(float))
+        if self.norm == 1:
+            tv = [
+                np.sum([q.norm for q in diff.matrix[:, i]])
+                for i in range(len(diff.matrix))
+            ]
+        elif self.norm == 2:
+            diff_norm_squared = (diff.transpose().conjugate() * diff).diag()
+            tv = np.sqrt(np.abs(diff_norm_squared).astype(float))
+
         return np.argsort(tv), tv
 
     def transform(self, signal):
