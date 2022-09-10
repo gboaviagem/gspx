@@ -296,7 +296,7 @@ class QGFT:
             hermitian_gso: bool = True, norm: int = 1):
         """Construct."""
         norm_values = [1, 2]
-        assert self.norm in norm_values, (
+        assert norm in norm_values, (
             f"The norm currently must be one of the values: {norm_values}."
         )
         self.verbose = verbose
