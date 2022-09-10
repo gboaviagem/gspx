@@ -183,6 +183,28 @@ class QMatrix:
         assert self.matrix.shape == other.matrix.shape
         return QMatrix.from_matrix(self.matrix * other.matrix)
 
+    @staticmethod
+    def unstack_complex_eig_matrix(V: np.ndarray, eig: np.ndarray):
+        """Unstack the complex adjoint eigenvector matrix."""
+        mask_imag_pos = np.imag(eig) > 0
+        mask_imag_null = np.imag(eig) == 0
+
+        # Taking only half of the eigenvalues with null imaginary part
+        idx = np.where(mask_imag_null)[0]
+        mask_imag_null[idx[:int(len(idx)/2)]] = False
+
+        mask = np.logical_or(mask_imag_pos, mask_imag_null)
+        V1 = V[:int(len(V) / 2), mask]
+        V2 = V[int(len(V) / 2):, mask]
+
+        Vq = implode_quaternions(np.dstack((
+            np.real(V1),
+            np.imag(V1),
+            - np.real(V2),
+            np.imag(V2)
+        )))
+        return Vq, mask
+
     def eigendecompose(self, hermitian_gso=True):
         """Eigendecompose the input matrix.
 
@@ -202,23 +224,7 @@ class QMatrix:
         else:
             eig, V = np.linalg.eigh(self.complex_adjoint)
 
-        mask_imag_pos = np.imag(eig) > 0
-        mask_imag_null = np.imag(eig) == 0
-
-        # Taking only half of the eigenvalues with null imaginary part
-        idx = np.where(mask_imag_null)[0]
-        mask_imag_null[idx[:int(len(idx)/2)]] = False
-
-        mask = np.logical_or(mask_imag_pos, mask_imag_null)
-        V1 = V[:int(len(V) / 2), mask]
-        V2 = V[int(len(V) / 2):, mask]
-
-        Vq = implode_quaternions(np.dstack((
-            np.real(V1),
-            np.imag(V1),
-            - np.real(V2),
-            np.imag(V2)
-        )))
+        Vq, mask = QMatrix.unstack_complex_eig_matrix(V=V, eig=eig)
 
         eigq = (
             np.real(eig[mask]) * Quaternion(1, 0, 0, 0) +
@@ -249,13 +255,17 @@ class QMatrix:
             obj = QMatrix.from_matrix(self.matrix[idx, :][:, idx])
         return np.all((obj - obj.conjugate().transpose()).abs() < tol)
 
-    def inv(self, rtol: float = 1e-05, atol: float = 1e-08):
+    def inv(
+            self, rtol: float = 1e-05, atol: float = 1e-08,
+            assert_cond: bool = True):
         """Compute the matrix inverse, if exists."""
         ca = self.complex_adjoint
-        if not self.is_hermitian():
+
+        if not self.is_hermitian() and assert_cond:
             assert np.linalg.cond(ca) < 1 / sys.float_info.epsilon, (
                 "The given matrix is not invertible."
             )
+
         nrows, _ = ca.shape
         n = int(nrows / 2)
         ca_inv = np.linalg.inv(ca)

@@ -67,6 +67,16 @@ class SocialGraphData:
     The graph edge weights are real-valued, and the graph signal is
     quaternion-valued.
 
+    Parameters
+    ----------
+    n_neighbors: int, default=4
+        Number of neighbors used in the determination of the edge
+        relationships.
+    dec: float, default=0.3
+        Decimation factor. It is the fraction of counties with
+        longitude greater than -102 which is retained (the rest is
+        ignored). The objective here is to make the graph sparser.
+
     Examples
     --------
     >>> # First three dataset rows
@@ -111,7 +121,7 @@ class SocialGraphData:
 
     """
 
-    def __init__(self, n_neighbors=4, dec=0.3):
+    def __init__(self, n_neighbors: int = 4, dec: float = 0.3):
         """Construct."""
         self.n_neighbors = n_neighbors
         assert dec <= 1 and dec > 0, (
