@@ -97,7 +97,7 @@ def plot_graph(
 
 
 def plot_nodes_plotly(coords: np.ndarray, **kwargs):
-    """Create a Plotly graphical object with graph nodes.
+    """Create a Plotly scatter plot figure with graph nodes.
 
     Parameters
     ----------
