@@ -1,4 +1,5 @@
 """Some useful datasets."""
+from abc import abstractmethod
 import pathlib
 import pandas as pd
 import numpy as np
@@ -29,25 +30,79 @@ def uk_weather():
     return pd.read_csv(fn, sep="\t")
 
 
-class WeatherGraphData:
-    """Build the graph and signal from UK weather data."""
+class BaseGraphData:
+    def __init__(self, n_neighbors):
+        self.n_neighbors = n_neighbors
+        self.A_ = None
+        self.data_ = None
+        self.coords_ = None
+
+    @abstractmethod
+    def data(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def graph(self):
+        raise NotImplementedError()
+
+    def describe_graph(self, return_dict: bool = False):
+        """Describe the created graph."""
+        A = self.graph[0] if self.A_ is None else self.A_
+        return describe(A, return_dict)
+
+
+class WeatherGraphData(BaseGraphData):
+    """Build the graph and signal from UK weather data.
+
+    Parameters
+    ----------
+    n_neighbors: int, default=4
+        Number of neighbors used in the determination of the edge
+        relationships.
+    dec: float, default=0.3
+        Decimation factor. It is the fraction of counties with
+        longitude greater than -102 which is retained (the rest is
+        ignored). The objective here is to make the graph sparser.
+
+    """
+
+    def __init__(self, n_neighbors: int = 4, england_only: bool = True):
+        """Construct."""
+        BaseGraphData.__init__(self, n_neighbors=n_neighbors)
+        self.england_only = england_only
+
+    @property
+    def data(self):
+        """Return the UK weather dataset."""
+        if self.data_ is not None:
+            return self.data_
+        df = uk_weather()
+        if self.england_only:
+            # Trying to extract only towns in England.
+            # First removing towns with latitude greater than 55.423
+            df = df[df['latitude'] <= 55.4223]
+            df = df[df['longitude'] >= -5.476]
+        self.data_ = df
+        return df
 
     @property
     def graph(self):
         """Create the graph of UK cities and weather signal."""
-        df = uk_weather()
+        if self.A_ is not None and self.coords_ is not None:
+            return self.A_, self.coords_
+        df = self.data
         positions = df[['longitude', 'latitude']].to_numpy()
-        coords = df[['longitude', 'latitude']].to_numpy()
+        self.coords_ = df[['longitude', 'latitude']].to_numpy()
         A = nearest_neighbors(
             positions,
-            n_neighbors=10).todense()
-        A = np.array(A) + np.array(A).T
-        return A, coords
+            n_neighbors=self.n_neighbors).todense()
+        self.A_ = np.array(A) + np.array(A).T
+        return self.A_, self.coords_
 
     @property
     def signal(self):
         """Create the graph signal with weather data."""
-        df = uk_weather()
+        df = self.data
         df_ = df[['humidity', 'pressure', 'temp', 'wind_speed']]
         weather_data = (
             (df_ - df_.min()) /
@@ -58,7 +113,7 @@ class WeatherGraphData:
         return s
 
 
-class SocialGraphData:
+class SocialGraphData(BaseGraphData):
     """Create a graph and graph signal out of socioeconomic data.
 
     The information concerns socioeconomic data of US Counties, from the
@@ -123,14 +178,11 @@ class SocialGraphData:
 
     def __init__(self, n_neighbors: int = 4, dec: float = 0.3):
         """Construct."""
-        self.n_neighbors = n_neighbors
+        BaseGraphData.__init__(self, n_neighbors=n_neighbors)
         assert dec <= 1 and dec > 0, (
             "The decimation factor must be positive and not greater than 1."
         )
         self.dec = dec
-        self.data_ = None
-        self.A_ = None
-        self.coords_ = None
 
     def describe_data(self):
         """Describe the variables in the socioeconomic dataset."""
@@ -197,12 +249,6 @@ class SocialGraphData:
             algorithm='ball_tree', mode='distance').todense()
         self.A_ = A + A.T
         return self.A_, self.coords_
-
-    def describe_graph(self, A: np.ndarray = None, return_dict: bool = False):
-        """Describe the created graph."""
-        if A is None:
-            A = self.graph[0] if self.A_ is None else self.A_
-        return describe(A, return_dict)
 
     @property
     def signal(self, verbose: bool = True):

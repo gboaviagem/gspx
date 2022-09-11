@@ -1,11 +1,15 @@
 """Utilities for visualization."""
 import matplotlib.pyplot as plt
 from matplotlib.cm import get_cmap
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 import networkx as nx
+import plotly.graph_objects as go
 
 from gspx.utils.quaternion_matrix import explode_quaternions
 from gspx.utils.graph import to_networkx
+from gspx.signals import QuaternionSignal
 
 
 def visualize_quat_mtx(M, dpi=None):
@@ -65,8 +69,6 @@ def plot_graph(
             - with_labels; default=False
 
     """
-    from gspx.signals import QuaternionSignal
-
     if isinstance(colors, np.ndarray) and len(colors.shape) == 1:
         # We create a pseudocolor signal
         cmap_name = 'viridis' if colormap is None else colormap
@@ -93,3 +95,46 @@ def plot_graph(
 
     plt.figure(figsize=figsize)
     nx.draw(G, pos=coords, **params)
+
+
+def plot_nodes_plotly(coords: np.ndarray, **kwargs):
+    """Create a Plotly graphical object with graph nodes.
+
+    Parameters
+    ----------
+    coords : np.ndarray, shape=(N, 2)
+        Coordinates of the N graph nodes.
+    **kwargs: dict
+        Keyword arguments of the `go.Scattergl()` class.
+    """
+    fig = go.Figure(data=go.Scattergl(
+        x = coords[:, 0],
+        y = coords[:, 1],
+        mode='markers',
+        **kwargs
+    ))
+    return fig
+
+
+def plot_quaternion_graph_signal(
+        s: QuaternionSignal, coords: np.ndarray,
+        figsize: tuple = (10, 16), **subplots_kwargs):
+    """Plot a quaternion graph signal."""
+    arr = s.to_array()
+    x = coords[:, 0]
+    y = coords[:, 1]
+
+    fig, axs = plt.subplots(2, 2, figsize=figsize, **subplots_kwargs)
+    _, dims = arr.shape
+    captions = [f"({i})" for i in ['a', 'b', 'c', 'd']]
+    cmaps = ['Reds', 'Blues', "Greens", 'Purples']
+    for d in range(dims):
+        ix = d % 2
+        iy = int(d >= 2)
+        this_fig = axs[iy, ix].scatter(x, y, c=arr[:, d], marker='.', cmap=cmaps[d])
+        axs[iy, ix].set_xlabel(captions[d])
+        divider = make_axes_locatable(axs[iy, ix])
+        cax = divider.append_axes('right', size='5%', pad=0.1)
+        fig.colorbar(this_fig, cax=cax, orientation='vertical')
+    fig.tight_layout()
+    return fig
