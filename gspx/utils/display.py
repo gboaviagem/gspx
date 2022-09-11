@@ -9,7 +9,6 @@ import plotly.graph_objects as go
 
 from gspx.utils.quaternion_matrix import explode_quaternions
 from gspx.utils.graph import to_networkx
-from gspx.signals import QuaternionSignal
 
 
 def visualize_quat_mtx(M, dpi=None):
@@ -108,8 +107,8 @@ def plot_nodes_plotly(coords: np.ndarray, **kwargs):
         Keyword arguments of the `go.Scattergl()` class.
     """
     fig = go.Figure(data=go.Scattergl(
-        x = coords[:, 0],
-        y = coords[:, 1],
+        x=coords[:, 0],
+        y=coords[:, 1],
         mode='markers',
         **kwargs
     ))
@@ -117,7 +116,7 @@ def plot_nodes_plotly(coords: np.ndarray, **kwargs):
 
 
 def plot_quaternion_graph_signal(
-        s: QuaternionSignal, coords: np.ndarray,
+        s, coords: np.ndarray,
         figsize: tuple = (10, 16), **subplots_kwargs):
     """Plot a quaternion graph signal."""
     arr = s.to_array()
@@ -131,7 +130,8 @@ def plot_quaternion_graph_signal(
     for d in range(dims):
         ix = d % 2
         iy = int(d >= 2)
-        this_fig = axs[iy, ix].scatter(x, y, c=arr[:, d], marker='.', cmap=cmaps[d])
+        this_fig = axs[iy, ix].scatter(
+            x, y, c=arr[:, d], marker='.', cmap=cmaps[d])
         axs[iy, ix].set_xlabel(captions[d])
         divider = make_axes_locatable(axs[iy, ix])
         cax = divider.append_axes('right', size='5%', pad=0.1)

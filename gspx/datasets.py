@@ -31,7 +31,10 @@ def uk_weather():
 
 
 class BaseGraphData:
+    """Base class for GraphData classes."""
+
     def __init__(self, n_neighbors):
+        """Construct."""
         self.n_neighbors = n_neighbors
         self.A_ = None
         self.data_ = None
@@ -39,10 +42,12 @@ class BaseGraphData:
 
     @abstractmethod
     def data(self):
+        """Return the dataframe with tabular data related to the graph."""
         raise NotImplementedError()
 
     @abstractmethod
     def graph(self):
+        """Return the adjacency matrix and node coordinates."""
         raise NotImplementedError()
 
     def describe_graph(self, return_dict: bool = False):
@@ -59,10 +64,52 @@ class WeatherGraphData(BaseGraphData):
     n_neighbors: int, default=4
         Number of neighbors used in the determination of the edge
         relationships.
-    dec: float, default=0.3
-        Decimation factor. It is the fraction of counties with
-        longitude greater than -102 which is retained (the rest is
-        ignored). The objective here is to make the graph sparser.
+    england_only: bool, default=True
+        If True, then only the towns in England are used.
+
+    Examples
+    --------
+    >>> data = WeatherGraphData(n_neighbors=7, england_only=True)
+    >>> print(data.data.head(1).T)
+                                        1
+    town          St.Asaph, Wales, the UK
+    latitude                    53.257999
+    longitude                      -3.442
+    humidity                           59
+    pressure                         1017
+    temp                           288.49
+    wind_speed                       3.71
+    wind_degrees                       99
+
+    >>> s = data.signal
+    >>> s.to_array()[:5, :]
+    array([[0.54545455, 0.32352941, 0.66127168, 0.37003405],
+          [0.09090909, 0.23529412, 0.84624277, 0.8830874 ],
+          [0.18181818, 0.29411765, 0.84393064, 0.70828604],
+          [1.        , 0.41176471, 0.        , 0.41089671],
+          [0.40909091, 0.32352941, 0.81040462, 0.30419977]])
+
+    >>> data = WeatherGraphData(n_neighbors=7, england_only=True)
+    >>> data.describe_graph()
+    n_nodes: 145
+    n_edges: 542
+    n_self_loops: 0
+    density: 0.051915708812260535
+    is_connected: True
+    n_connected_components: 1
+    is_directed: False
+    is_weighted: True
+
+    >>> data = WeatherGraphData(n_neighbors=7, england_only=False)
+    >>> data.describe_graph()
+    n_nodes: 177
+    n_edges: 670
+    n_self_loops: 0
+    density: 0.043014894709809966
+    is_connected: False
+    n_connected_components: 3
+    is_directed: False
+    is_weighted: True
 
     """
 
