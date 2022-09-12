@@ -176,6 +176,17 @@ class QuaternionSignal(QMatrix, Signal):
         """Compute length."""
         return len(self.matrix)
 
+    @property
+    def norm1(self) -> float:
+        """Return the L1-norm of this signal."""
+        return np.sum([q.norm for q in self.matrix.ravel()])
+
+    @property
+    def norm2(self) -> float:
+        """Return the L2-norm of this signal."""
+        return np.sqrt(
+            (self.conjugate().transpose() * self).matrix.ravel()[0].norm)
+
     def to_rgb(self, **kwargs):
         """RGB (normalized) representation of the signal. Real part ignored."""
         arr = self.to_array(max_value='self')

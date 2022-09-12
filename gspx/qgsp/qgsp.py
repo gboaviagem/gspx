@@ -3,6 +3,7 @@
 import sys
 import numpy as np
 from pyquaternion import Quaternion
+from tqdm import tqdm
 
 from gspx.utils.quaternion_matrix import complex_adjoint, \
     implode_quaternions, conjugate, explode_quaternions, \
@@ -300,15 +301,13 @@ class QGFT:
     """Quaternion-valued Graph Fourier Transform."""
 
     def __init__(
-            self, verbose: bool = True, sort: bool = True,
-            hermitian_gso: bool = True, norm: int = 1):
+            self, verbose: bool = True, sort: bool = True, norm: int = 1):
         """Construct."""
         norm_values = [1, 2]
         assert norm in norm_values, (
             f"The norm currently must be one of the values: {norm_values}."
         )
         self.verbose = verbose
-        self.hermitian_gso = hermitian_gso
         self.norm = norm
         self.eigq = None
         self.eigc = None
@@ -337,7 +336,7 @@ class QGFT:
 
         self.inform("Running eigendecomposition of the shift operator.")
         self.eigq, self.Vq = shift_operator.eigendecompose(
-            hermitian_gso=self.hermitian_gso)
+            hermitian_gso=shift_operator.is_hermitian())
 
         try:
             self.Vq_inv = self.Vq.inv()
@@ -353,15 +352,36 @@ class QGFT:
         # Frequency ordering
         if self.sort:
             self.inform("Sorting the frequencies based on Total Variation.")
-            self.idx_freq, self.tv_ = self.sort_frequencies(shift_operator)
+            self.idx_freq, self.tv_ = self.sort_total_variation(shift_operator)
 
         return self
 
-    def sort_frequencies(self, shift_operator: QMatrix):
+    def sort_total_variation(self, shift_operator: QMatrix):
         """Find the eigenvalues order that sort the frequencies."""
         assert self.Vq is not None, ("One must run `fit` first.")
 
-        Vq_shifted = shift_operator * self.Vq
+        from gspx.signals import QuaternionSignal
+        if self.norm == 1:
+            desc = "Normalizing each eigenvector by its L1-norm."
+            for v in tqdm(range(len(self.Vq.matrix)), desc=desc):
+                l1_norm = QuaternionSignal.from_samples(
+                    self.Vq.matrix[:, v]).norm1
+                if l1_norm < 1e-10:
+                    continue
+                self.Vq.matrix[:, v] = self.Vq.matrix[:, v] * (1 / l1_norm)
+
+        elif self.norm == 2:
+            desc = "Normalizing each eigenvector by its L2-norm."
+            for v in tqdm(range(len(self.Vq.matrix)), desc=desc):
+                l2_norm = QuaternionSignal.from_samples(
+                    self.Vq.matrix[:, v]).norm2
+                if l2_norm < 1e-10:
+                    continue
+                self.Vq.matrix[:, v] = self.Vq.matrix[:, v] * (1 / l2_norm)
+
+        qnorms = [q.norm for q in self.eigq.matrix.ravel()]
+        max_qnorm = np.max(qnorms)
+        Vq_shifted = shift_operator * self.Vq * (1 / max_qnorm)
         diff = Vq_shifted - self.Vq
         if self.norm == 1:
             tv = [
