@@ -186,12 +186,20 @@ class QMatrix:
     @staticmethod
     def unstack_complex_eig_matrix(V: np.ndarray, eig: np.ndarray):
         """Unstack the complex adjoint eigenvector matrix."""
+        eig = np.round(eig, decimals=10)
         mask_imag_pos = np.imag(eig) > 0
         mask_imag_null = np.imag(eig) == 0
+        track = []
+        for i, e in enumerate(eig[mask_imag_null]):
+            if e in track:
+                mask_imag_null[i] = False
+            else:
+                track.append(e)
 
         # Taking only half of the eigenvalues with null imaginary part
+        how_many_null = int((len(eig) - len(np.where(mask_imag_pos)[0])) / 2)
         idx = np.where(mask_imag_null)[0]
-        mask_imag_null[idx[:int(len(idx)/2)]] = False
+        mask_imag_null[idx[how_many_null:]] = False
 
         mask = np.logical_or(mask_imag_pos, mask_imag_null)
         V1 = V[:int(len(V) / 2), mask]
@@ -205,7 +213,7 @@ class QMatrix:
         )))
         return Vq, mask
 
-    def eigendecompose(self, hermitian_gso=True):
+    def eigendecompose(self, hermitian_gso=False):
         """Eigendecompose the input matrix.
 
         Parameters
@@ -219,7 +227,7 @@ class QMatrix:
             Matrix with eigenvectors.
 
         """
-        if hermitian_gso:
+        if not hermitian_gso:
             eig, V = np.linalg.eig(self.complex_adjoint)
         else:
             eig, V = np.linalg.eigh(self.complex_adjoint)
