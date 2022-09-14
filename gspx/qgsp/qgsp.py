@@ -191,11 +191,12 @@ class QMatrix:
         mask_imag_pos = np.imag(eig) > 0
         mask_imag_null = np.imag(eig) == 0
         track = []
+        idx_mask_imag_null = np.where(mask_imag_null)[0]
         for i, e in enumerate(eig[mask_imag_null]):
-            if e in track:
-                mask_imag_null[i] = False
+            if np.real(e) in track:
+                mask_imag_null[idx_mask_imag_null[i]] = False
             else:
-                track.append(e)
+                track.append(np.real(e))
 
         # Taking only half of the eigenvalues with null imaginary part
         how_many_null = int((len(eig) - len(np.where(mask_imag_pos)[0])) / 2)
