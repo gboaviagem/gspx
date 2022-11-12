@@ -313,7 +313,6 @@ class QGFT:
         self.eigq = None
         self.eigc = None
         self.Vq = None
-        self.Vq_inv = None
         self.sort = sort
         self.idx_freq = None
         self.tv_ = None
@@ -340,7 +339,7 @@ class QGFT:
             hermitian_gso=shift_operator.is_hermitian())
 
         try:
-            self.Vq_inv = self.Vq.inv()
+            _ = self.Vq.inv()
         except AssertionError as e:
             self.inform(
                 f"The eigenvector matrix could not be inverted: {e}.")
@@ -407,13 +406,13 @@ class QGFT:
         signal : np.ndarray, shape=(N,)
 
         """
-        assert self.Vq_inv is not None, (
-            "The eigenvector matrix was not inverted."
+        assert self.Vq is not None, (
+            "The QGFT was not fitted."
         )
         assert len(signal.matrix) == len(signal.matrix.ravel()), (
             "Provide a QMatrix column vector or a QuaternionSignal."
         )
-        ss = self.Vq_inv * signal
+        ss = self.Vq.inv() * signal
         return ss
 
     def inverse_transform(self, signal):
