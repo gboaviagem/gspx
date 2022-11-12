@@ -364,7 +364,9 @@ class QGFT:
         from gspx.signals import QuaternionSignal
         if self.norm == 1:
             desc = "Normalizing each eigenvector by its L1-norm."
-            for v in tqdm(range(len(self.Vq.matrix)), desc=desc):
+            for v in (
+                    tqdm(range(len(self.Vq.matrix)), desc=desc)
+                    if self.verbose else range(len(self.Vq.matrix))):
                 l1_norm = QuaternionSignal.from_samples(
                     self.Vq.matrix[:, v]).norm1
                 if l1_norm < 1e-10:
@@ -373,7 +375,9 @@ class QGFT:
 
         elif self.norm == 2:
             desc = "Normalizing each eigenvector by its L2-norm."
-            for v in tqdm(range(len(self.Vq.matrix)), desc=desc):
+            for v in (
+                    tqdm(range(len(self.Vq.matrix)), desc=desc)
+                    if self.verbose else range(len(self.Vq.matrix))):
                 l2_norm = QuaternionSignal.from_samples(
                     self.Vq.matrix[:, v]).norm2
                 if l2_norm < 1e-10:

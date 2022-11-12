@@ -13,7 +13,8 @@ def create_quaternion_weights(
         jcols: List[str], kcols: List[str],
         gauss_den: Union[int, float] = 10,
         hermitian: bool = True,
-        sparse_output: bool = False) -> Union[QMatrix, tuple]:
+        sparse_output: bool = False,
+        verbose: bool = True) -> Union[QMatrix, tuple]:
     """Populate a weighted adjacency matrix with quaternions.
 
     It is assumed that `A` is an adjacency matrix
@@ -46,6 +47,7 @@ def create_quaternion_weights(
         If True, make the quaternion output matrix hermitian.
     sparse_output : bool, default=True
         If True, only the sparse data (indices and entries) are returned.
+    verbose : bool, default = True
 
     Return
     ------
@@ -67,7 +69,7 @@ def create_quaternion_weights(
     entriesq = []
     df_ = df[cols]
     remove_idx = []
-    for i, xi in enumerate(tqdm(x)):
+    for i, xi in enumerate(tqdm(x) if verbose else x):
         diff = (df_.iloc[xi, :] - df_.iloc[y[i], :]).abs()
         q = Quaternion(
             np.linalg.norm(diff[cols1]),
@@ -96,6 +98,9 @@ def create_quaternion_weights(
     if sparse_output:
         return np.array(entriesq), idx_nz, shape
     else:
-        print("Please wait while the dense quaternion matrix is assembled.")
+        if verbose:
+            print(
+                "Please wait while the dense "
+                "quaternion matrix is assembled.")
         return QMatrix.from_sparse(
             np.array(entriesq), idx_nz=idx_nz, shape=shape)

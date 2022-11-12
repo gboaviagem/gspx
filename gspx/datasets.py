@@ -33,9 +33,10 @@ def uk_weather():
 class BaseGraphData:
     """Base class for GraphData classes."""
 
-    def __init__(self, n_neighbors):
+    def __init__(self, n_neighbors, verbose: bool = True):
         """Construct."""
         self.n_neighbors = n_neighbors
+        self.verbose = verbose
         self.A_ = None
         self.data_ = None
         self.coords_ = None
@@ -223,9 +224,11 @@ class SocialGraphData(BaseGraphData):
 
     """
 
-    def __init__(self, n_neighbors: int = 4, dec: float = 0.3):
+    def __init__(
+            self, n_neighbors: int = 4, dec: float = 0.3,
+            verbose: bool = True):
         """Construct."""
-        BaseGraphData.__init__(self, n_neighbors=n_neighbors)
+        BaseGraphData.__init__(self, n_neighbors=n_neighbors, verbose=verbose)
         assert dec <= 1 and dec > 0, (
             "The decimation factor must be positive and not greater than 1."
         )
@@ -298,7 +301,7 @@ class SocialGraphData(BaseGraphData):
         return self.A_, self.coords_
 
     @property
-    def signal(self, verbose: bool = True):
+    def signal(self):
         """Create the quaternion graph signal with socioeconomic data."""
         df = self.data if self.data_ is None else self.data_
         cols = [
@@ -312,7 +315,7 @@ class SocialGraphData(BaseGraphData):
         ).to_numpy()
 
         s = QuaternionSignal.from_rectangular(signal_data)
-        if verbose:
+        if self.verbose:
             print(
                 "Created a quaternion signal with components holding "
                 f"the following information: {cols}.")
