@@ -4,20 +4,22 @@ from tqdm import tqdm
 from pyquaternion import Quaternion
 from gspx.qgsp.qgsp import QMatrix
 import pandas as pd
-from typing import Union
+from typing import List, Union
 
 
 def create_quaternion_weights(
         A: np.ndarray, df: pd.DataFrame,
-        icols: list, jcols: list, kcols: list,
+        cols1: List[str], icols: List[str],
+        jcols: List[str], kcols: List[str],
         gauss_den: Union[int, float] = 10,
         hermitian: bool = True,
         sparse_output: bool = False) -> Union[QMatrix, tuple]:
     """Populate a weighted adjacency matrix with quaternions.
 
-    It is assumed that `A` is a weighted adjacency matrix
+    It is assumed that `A` is an adjacency matrix
     and the features in `df` are assigned, row by row, to vertices
-    in the graph.
+    in the graph. `A` is provided only to capture connectivity, the values
+    in its entries do not matter, as long as they are different than zero.
 
     Not very optimized.
 
@@ -28,6 +30,8 @@ def create_quaternion_weights(
     df : pd.DataFrame
         Dataframe with data used to compose the i, j and k weight
         dimensions.
+    cols1 : list of str
+        Columns whose distance will compose the real part.
     icols : list of str
         Columns whose distance will compose the i dimension.
     jcols : list of str
@@ -55,19 +59,18 @@ def create_quaternion_weights(
     else:
         idx_nz = np.where(A != 0)
 
-    entries = np.array(A[idx_nz]).ravel()
     shape = A.shape
 
-    cols = icols + jcols + kcols
+    cols = list(set(cols1 + icols + jcols + kcols))
     x = idx_nz[0]
     y = idx_nz[1]
     entriesq = []
     df_ = df[cols]
     remove_idx = []
-    for i, entry in enumerate(tqdm(entries)):
-        diff = (df_.iloc[x[i], :] - df_.iloc[y[i], :]).abs()
+    for i, xi in enumerate(tqdm(x)):
+        diff = (df_.iloc[xi, :] - df_.iloc[y[i], :]).abs()
         q = Quaternion(
-            entry,
+            np.linalg.norm(diff[cols1]),
             np.linalg.norm(diff[icols]),
             np.linalg.norm(diff[jcols]),
             np.linalg.norm(diff[kcols])
