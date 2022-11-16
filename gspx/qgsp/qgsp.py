@@ -317,12 +317,12 @@ class QGFT:
         self.idx_freq = None
         self.tv_ = None
 
-    def inform(self, msg):
+    def inform(self, msg: str):
         """Inform the user."""
         if self.verbose:
             print(msg)
 
-    def fit(self, shift_operator):
+    def fit(self, shift_operator: QMatrix):
         """Fit the object.
 
         Parameters
@@ -428,3 +428,32 @@ class QGFT:
         )
         ss = self.Vq * signal
         return ss
+
+    def reconstruct_with_compression(
+            self, spectrum: QMatrix,
+            compression_rate: float = 0.9, idx: np.ndarray = None) -> QMatrix:
+        """Apply the inverse transform preserving only part of the spectrum.
+
+        Parameters
+        ----------
+        spectrum: QuaternionSignal
+        compression_rate: float = 0.9
+
+        """
+        assert compression_rate < 1 and compression_rate > 0
+
+        if idx is None:
+            magnitude = spectrum.abs().ravel()
+            # Sorting the magnitude (highest to lowest frequency component)
+            idx = np.argsort(magnitude)[::-1]
+
+        nsamples = len(spectrum.matrix.ravel())
+        keep = int((1 - compression_rate) * nsamples)
+
+        ss_zip = QMatrix.from_matrix(spectrum.matrix.copy())
+
+        # Now let us actually erase the components in the spectrum
+        ss_zip.matrix[idx[keep:], 0] = Quaternion(0, 0, 0, 0)
+        s_zip = self.inverse_transform(ss_zip)
+
+        return s_zip

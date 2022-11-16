@@ -62,6 +62,7 @@ def create_quaternion_weights(
         idx_nz = np.where(A != 0)
 
     shape = A.shape
+    entries = np.array(A[idx_nz]).ravel()
 
     cols = list(set(cols1 + icols + jcols + kcols))
     x = idx_nz[0]
@@ -69,14 +70,15 @@ def create_quaternion_weights(
     entriesq = []
     df_ = df[cols]
     remove_idx = []
-    for i, xi in enumerate(tqdm(x) if verbose else x):
-        diff = (df_.iloc[xi, :] - df_.iloc[y[i], :]).abs()
+    for i, entry in enumerate(tqdm(entries) if verbose else entries):
+        diff = (df_.iloc[x[i], :] - df_.iloc[y[i], :]).abs()
         q = Quaternion(
             np.linalg.norm(diff[cols1]),
             np.linalg.norm(diff[icols]),
             np.linalg.norm(diff[jcols]),
             np.linalg.norm(diff[kcols])
         )
+        q = entry * q.unit
         exp_ = Quaternion.exp(q / gauss_den)
         if exp_.norm > 1e-7:
             entriesq.append(exp_.inverse)
