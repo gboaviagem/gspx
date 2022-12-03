@@ -207,7 +207,7 @@ class QuaternionSignal(QMatrix, Signal):
         return rgba
 
     @staticmethod
-    def show(obj, dpi=100, ordering=None, **kwargs):
+    def show(obj, dpi=200, ordering=None, **kwargs):
         """Visualize the signal quaternion dimensions."""
         arr1D = obj.matrix.ravel()
         if ordering is not None:

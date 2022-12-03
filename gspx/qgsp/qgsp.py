@@ -84,13 +84,17 @@ class QMatrix:
         return QMatrix.from_matrix(new)
 
     @staticmethod
-    def vander(signal, deg, increasing=True):
-        """Create a Vandermonde quaternion matrix."""
+    def vander(signal, N: int, increasing: bool = True):
+        """Create a Vandermonde quaternion matrix.
+
+        The N parameter equals `deg + 1`, that is, the columns of the
+        Vandermonde matrix go from exponent 0 to exponent `deg`.
+        """
         assert len(signal.matrix) == len(signal.matrix.ravel()), (
             "Provide a QMatrix column vector or a QuaternionSignal."
         )
         arr = signal.matrix.ravel()
-        mat = np.vander(arr, N=deg, increasing=increasing)
+        mat = np.vander(arr, N=N, increasing=increasing)
         mat[:, 0] = [Quaternion(1, 0, 0, 0) for _ in arr]
         return QMatrix.from_matrix(mat)
 
