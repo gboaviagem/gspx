@@ -15,7 +15,7 @@ from gspx.datasets import WeatherGraphData
 from gspx.signals import QuaternionSignal
 from gspx.adaptive import QLMS
 from gspx.qgsp import create_quaternion_weights, QGFT, QMatrix
-from gspx.utils.display import plot_quaternion_graph_signal
+from gspx.utils.display import plot_quaternion_graph_signal, plot_graph
 from io import BytesIO
 
 
@@ -65,7 +65,7 @@ Ar, coords = data.graph
 s = data.signal
 df = data.data
 
-st.markdown("The graph signal will have quaternion components (1, i, j, k) given by the columns `'pressure', 'humidity', 'temp', 'wind_speed'` in the following dataframe:")
+st.markdown("The graph signal will have quaternion components (1, i, j, k) given by the columns `'humidity', 'pressure', 'temp', 'wind_speed'` in the following dataframe:")
 
 st.dataframe(data=df, width=1000, height=None)
 
@@ -73,32 +73,31 @@ st.markdown("The quaternion adjacency matrix was created using `gspx` through th
 st.code(
 """
 from gspx.datasets import WeatherGraphData
-from gspx.qgsp import create_quaternion_weights
 
 data = WeatherGraphData(n_neighbors=7, england_only=True)
 Ar, coords = data.graph
 s = data.signal
 df = data.data
 
-Aq = create_quaternion_weights(
-    Ar, df, cols1 = ['pressure'],
-    icols=['humidity'], jcols=['temp'],
-    kcols=['wind_speed'], gauss_den=2,
-    hermitian=True)
+Aq = data.quaternion_adjacency_matrix()
 """,
 language="python"
 )
+
+st.markdown("The graph is depicted in the figure below.")
+
+plot_graph(
+    Ar, coords, figsize=(4.5, 5.5))
+show_and_save(
+    plot_name="uk_graph",
+    fig_size_inches=(3.5, 4.5))
 
 st.markdown("The data in columns `'pressure', 'humidity', 'temp', 'wind_speed'` is normalized column-wise using linear scaling to make each column fit the range [0, 1]. The graph signal can be visualized by splitting each quaternion component in a pseudocolor scale as such:")
 
 @st.cache
 def get_quaternion_adj():
     """Run and cache."""
-    Aq = create_quaternion_weights(
-        Ar, df, cols1 = ['pressure'],
-        icols=['humidity'], jcols=['temp'],
-        kcols=['wind_speed'], gauss_den=2,
-        hermitian=True)
+    Aq = data.quaternion_adjacency_matrix()
     return Aq
 
 st.markdown("**Figure: Quaternion graph signal.**")

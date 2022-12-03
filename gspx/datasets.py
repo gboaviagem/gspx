@@ -7,7 +7,9 @@ from typing import Union
 import json
 
 from gspx.utils.graph import nearest_neighbors, describe
+from gspx.utils.quaternion_matrix import explode_quaternions
 from gspx.signals import QuaternionSignal
+from gspx.qgsp.utils import create_quaternion_weights
 
 PATH_PREFIX = pathlib.Path(__file__).parent
 
@@ -33,23 +35,52 @@ def uk_weather():
 class BaseGraphData:
     """Base class for GraphData classes."""
 
-    def __init__(self, n_neighbors, verbose: bool = True):
+    def __init__(self, n_neighbors, feature_names, verbose: bool = True):
         """Construct."""
         self.n_neighbors = n_neighbors
         self.verbose = verbose
+        self.feature_names = feature_names
         self.A_ = None
         self.data_ = None
         self.coords_ = None
 
+    @property
     @abstractmethod
     def data(self):
         """Return the dataframe with tabular data related to the graph."""
         raise NotImplementedError()
 
+    @property
     @abstractmethod
     def graph(self):
-        """Return the adjacency matrix and node coordinates."""
+        """Return the real-valued adjacency matrix and node coordinates."""
         raise NotImplementedError()
+
+    def quaternion_adjacency_matrix(
+            self, gauss_den: float = 2, hermitian: bool = True, **kwargs):
+        """Return the quaternion-valued adjacency matrix.
+
+        Parameters
+        ----------
+        df: pd.DataFrame
+            Dataframe with the 
+        gauss_den : float, default=2
+            Integer assigned to the denominator in the gaussian
+            weight distribution, as in `exp(- (x) / gauss_den)`.
+            It is related to the gaussian standard deviation.
+        hermitian : bool, default=True
+            If True, make the quaternion output matrix hermitian.
+
+        """
+        Ar, _ = self.graph
+        features = explode_quaternions(self.signal.matrix)[:, 0, :]
+        df = pd.DataFrame(features, columns=self.feature_names)
+        Aq = create_quaternion_weights(
+            Ar, df, cols1 = [self.feature_names[0]],
+            icols=[self.feature_names[1]], jcols=[self.feature_names[2]],
+            kcols=[self.feature_names[3]], gauss_den=gauss_den,
+            hermitian=hermitian, **kwargs)
+        return Aq
 
     def describe_graph(self, return_dict: bool = False):
         """Describe the created graph."""
@@ -116,7 +147,9 @@ class WeatherGraphData(BaseGraphData):
 
     def __init__(self, n_neighbors: int = 4, england_only: bool = True):
         """Construct."""
-        BaseGraphData.__init__(self, n_neighbors=n_neighbors)
+        feature_names = ['humidity', 'pressure', 'temp', 'wind_speed']
+        BaseGraphData.__init__(
+            self, n_neighbors=n_neighbors, feature_names=feature_names)
         self.england_only = england_only
 
     @property
@@ -151,7 +184,7 @@ class WeatherGraphData(BaseGraphData):
     def signal(self):
         """Create the graph signal with weather data."""
         df = self.data
-        df_ = df[['humidity', 'pressure', 'temp', 'wind_speed']]
+        df_ = df[self.feature_names]
         weather_data = (
             (df_ - df_.min()) /
             (df_.max() - df_.min())
@@ -228,7 +261,13 @@ class SocialGraphData(BaseGraphData):
             self, n_neighbors: int = 4, dec: float = 0.3,
             verbose: bool = True):
         """Construct."""
-        BaseGraphData.__init__(self, n_neighbors=n_neighbors, verbose=verbose)
+        feature_names = [
+            'bachelors_2017', 'median_household_income_2017',
+            'unemployment_rate_2017', 'uninsured_2017'
+        ]
+        BaseGraphData.__init__(
+            self, n_neighbors=n_neighbors, verbose=verbose,
+            feature_names=feature_names)
         assert dec <= 1 and dec > 0, (
             "The decimation factor must be positive and not greater than 1."
         )
@@ -304,11 +343,7 @@ class SocialGraphData(BaseGraphData):
     def signal(self):
         """Create the quaternion graph signal with socioeconomic data."""
         df = self.data if self.data_ is None else self.data_
-        cols = [
-            'bachelors_2017', 'median_household_income_2017',
-            'unemployment_rate_2017', 'uninsured_2017'
-        ]
-        df_ = df[cols]
+        df_ = df[self.feature_names]
         signal_data = (
             (df_ - df_.min()) /
             (df_.max() - df_.min())
@@ -318,5 +353,5 @@ class SocialGraphData(BaseGraphData):
         if self.verbose:
             print(
                 "Created a quaternion signal with components holding "
-                f"the following information: {cols}.")
+                f"the following information: {self.feature_names}.")
         return s

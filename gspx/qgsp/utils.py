@@ -14,7 +14,7 @@ def create_quaternion_weights(
         gauss_den: Union[int, float] = 10,
         hermitian: bool = True,
         sparse_output: bool = False,
-        verbose: bool = True) -> Union[QMatrix, tuple]:
+        verbose: bool = True, **kwargs) -> Union[QMatrix, tuple]:
     """Populate a weighted adjacency matrix with quaternions.
 
     It is assumed that `A` is an adjacency matrix
