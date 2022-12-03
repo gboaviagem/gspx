@@ -92,7 +92,7 @@ show_and_save(
     plot_name="uk_graph",
     fig_size_inches=(3.5, 4.5))
 
-st.markdown("The data in columns `'pressure', 'humidity', 'temp', 'wind_speed'` is normalized column-wise using linear scaling to make each column fit the range [0, 1]. The graph signal can be visualized by splitting each quaternion component in a pseudocolor scale as such:")
+st.markdown("The data in columns `'humidity', 'pressure', 'temp', 'wind_speed'` is normalized column-wise using linear scaling to make each column fit the range [0, 1]. The graph signal can be visualized by splitting each quaternion component in a pseudocolor scale as such:")
 
 @st.cache
 def get_quaternion_adj():
