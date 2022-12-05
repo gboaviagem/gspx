@@ -10,15 +10,15 @@ This package aims to implement an extension of [graph signal processing (GSP)](h
 
 # Getting started
 
-The tutorial that best demonstrate the use of *quaternion graph signal processing* (QGSP) using `gspx`
-is the following:
+Check the links in the **[gspx-streamlit-apps](https://github.com/gboaviagem/gspx-streamlit-apps)** repository, to see an online showcase of the `gspx` tools. Feel free to check also the source code in the repository, to verify how each app calls the `gspx` methods. The apps cover practical examples on Quaternion Graph Signal Processing, regarding
 
-- [FIR low-pass filter design on quaternion-weighted graph](./notebooks/qlms.ipynb)
+- Graph and signal visualization,
+- QGFT and spectral analysis,
+- approximation of ideal filters with FIR LSI filters designed via QLMS.
 
-The reader may dive deep into more tools in `gspx` through these guided examples:
+For a robust example on QGFT and compression of a quaternion graph signal in a 1000-nodes graph using `gspx`, check **[this Google Colab notebook](https://colab.research.google.com/drive/1cTOVeRbEDy86hEMXRoLfjy6An7mhtzdB?usp=sharing)**.
 
-- [Quaternion matrices](./gspx/utils/README.md)
-- [FIR low-pass filter design on *real-weighted* graph](./notebooks/lms.ipynb)
+For a quick and simpler introduction on how to use `gspx` classes for quaternion matrices, [check this tutorial](./gspx/utils/README.md).
 
 ## Instalation
 
