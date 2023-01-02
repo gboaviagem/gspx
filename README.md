@@ -1,12 +1,13 @@
 # gspx: Graph Signal Processing on eXtension algebras
 ![coverage](./coverage.svg)
 
-Python package for implementing graph signal processing on extension (higher dimensional) algebras (currently, only quaternions)
-
+Python package for implementing graph signal processing on extension (higher dimensional) algebras (currently, only quaternions).
 
 Higher-dimensional algebras over the real numbers, beyond the complex numbers, present the benefit of encoding many features (dimensions, channels, you name it) within a single element. As such, differently from vector spaces, algebraic operations deal with all these features holistically, at once.
 
-This package aims to implement an extension of [graph signal processing (GSP)](https://arxiv.org/pdf/1712.00468) to higher-dimensional algebras, starting with [quaternions](https://en.wikipedia.org/wiki/Quaternion), aiming towards dealing with signals having elements in a Clifford algebra. This is part of an ongoing doctorate research at the Federal University of Pernambuco (UFPE).
+This package aims to implement an extension of [graph signal processing (GSP)](https://arxiv.org/pdf/1712.00468) to higher-dimensional algebras, starting with [quaternions](https://en.wikipedia.org/wiki/Quaternion), aiming towards dealing with signals having elements in a Clifford algebra.
+
+This is part of **my doctorate research** at the Federal University of Pernambuco (UFPE), **concluded in December 23th 2022**, after the Thesis Defense and subsequent declaration of approval with no conditions. [See the Thesis here](https://github.com/gboaviagem/phd-thesis).
 
 # Getting started
 
